@@ -102,9 +102,8 @@ class RandomEnvironment:
         
         return True
     
-    def sample_free_point(self) -> Tuple[float, float]:
+    def sample_free_point(self, max_attempts=1000) -> Tuple[float, float]:
         """Sample a random free point in the environment"""
-        max_attempts = 1000
         for _ in range(max_attempts):
             x = np.random.uniform(0, self.width)
             y = np.random.uniform(0, self.height)
@@ -130,6 +129,67 @@ class RandomEnvironment:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_title(f'Random Environment (Target: {self.density}%, Actual: {actual_density:.1f}%)')
+        ax.grid(True, alpha=0.3)
+        ax.set_aspect('equal')
+        plt.tight_layout()
+        plt.show()
+
+    def show_path(self, 
+                  start: Tuple[float, float],
+                  goal: Tuple[float, float],
+                  path: Optional[List[Tuple[float, float]]] = None):
+        """
+        Visualize the environment with start, goal, and path
+        
+        Parameters:
+        -----------
+        start : tuple (x, y)
+            Start position
+        goal : tuple (x, y)
+            Goal position
+        path : list of tuples, optional
+            Path as [(x, y), ...] waypoints
+        """
+        fig, ax = plt.subplots(figsize=(10, 10))
+        
+        # Draw environment
+        ax.imshow(self.grid, cmap='binary', origin='lower',
+                 extent=[0, self.width, 0, self.height])
+        
+        # Draw path (if found)
+        if path and len(path) > 0:
+            path_x = [p[0] for p in path]
+            path_y = [p[1] for p in path]
+            ax.plot(path_x, path_y, 'b-', linewidth=2, label='Path', alpha=0.8)
+            
+            # Add waypoint markers
+            ax.plot(path_x, path_y, 'bo', markersize=6, alpha=0.6)
+        
+        # Draw start (green circle)
+        ax.plot(start[0], start[1], 'go', markersize=15,
+               label='Start', markeredgecolor='black', markeredgewidth=2)
+        
+        # Draw goal (red star)
+        ax.plot(goal[0], goal[1], 'r*', markersize=20,
+               label='Goal', markeredgecolor='black', markeredgewidth=2)
+        
+        # Configure plot
+        ax.set_xlim(0, self.width)
+        ax.set_ylim(0, self.height)
+        ax.set_xlabel('X', fontsize=12)
+        ax.set_ylabel('Y', fontsize=12)
+        
+        # Simple title
+        if path:
+            path_length = sum(np.sqrt((path[i+1][0] - path[i][0])**2 + 
+                                     (path[i+1][1] - path[i][1])**2)
+                            for i in range(len(path) - 1))
+            title = f'Path Planning - Path Found (Length: {path_length:.2f})'
+        else:
+            title = 'Path Planning - No Path Found'
+        
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.legend(loc='upper right', fontsize=11)
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         plt.tight_layout()

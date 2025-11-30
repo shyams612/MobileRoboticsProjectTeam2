@@ -6,3 +6,9 @@ if __name__ == "__main__":
     print(f"   Environment created: {env.width}x{env.height}, density={env.density}%")
     # Visualize just the environment
     env.visualize()
+
+    # Sample usage for planner
+    from project_root.planner import RRTPlanner
+    planner = RRTPlanner(env, start=(5, 5), goal=(45, 45))
+    path = planner.search()
+    planner.show_path() 
