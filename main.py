@@ -1,4 +1,6 @@
 from project_root.environment.RandomEnvironment import RandomEnvironment
+from project_root.planner.RRTPlanner import RRTPlanner
+
 
 if __name__ == "__main__":
     # Create random environment
@@ -8,7 +10,6 @@ if __name__ == "__main__":
     env.visualize()
 
     # Sample usage for planner
-    from project_root.planner import RRTPlanner
-    planner = RRTPlanner(env, start=(5, 5), goal=(45, 45))
+    planner = RRTPlanner(start=(15, 5), goal=(45, 40), env=env)
     path = planner.search()
     planner.show_path() 
