@@ -1,5 +1,5 @@
 from project_root.environment.RandomEnvironment import RandomEnvironment
-from project_root.planner.RRTPlanner import RRTPlanner
+from project_root.planner.SamplePlanner import SamplePlanner
 
 
 if __name__ == "__main__":
@@ -10,6 +10,6 @@ if __name__ == "__main__":
     env.visualize()
 
     # Sample usage for planner
-    planner = RRTPlanner(start=(15, 5), goal=(45, 40), env=env)
+    planner = SamplePlanner(start=(15, 5), goal=(45, 40), env=env)
     path = planner.search()
     planner.show_path() 
