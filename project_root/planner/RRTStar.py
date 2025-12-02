@@ -111,7 +111,7 @@ class RRTStar:
             # Check collision
             if not self.env.is_free(new_x, new_y):
                 continue
-            if not self.env.is_collision_free((nearest_node.x, nearest_node.y),
+            if not self.env.is_straight_collision_free((nearest_node.x, nearest_node.y),
                                               (new_x, new_y)):
                 continue
 
@@ -126,7 +126,7 @@ class RRTStar:
 
             for i in neighbors:
                 n = self.nodes[i]
-                if self.env.is_collision_free((n.x, n.y), (new_x, new_y)):
+                if self.env.is_straight_collision_free((n.x, n.y), (new_x, new_y)):
                     temp_cost = n.cost + self.distance((n.x, n.y), (new_x, new_y))
                     if temp_cost < best_cost:
                         best_parent = i
@@ -153,7 +153,7 @@ class RRTStar:
                                                          (n.x, n.y))
 
                 if new_cost < n.cost:
-                    if self.env.is_collision_free((new_node.x, new_node.y), (n.x, n.y)):
+                    if self.env.is_straight_collision_free((new_node.x, new_node.y), (n.x, n.y)):
                         # Update parent
                         self.nodes[i].parent = new_index
                         self.nodes[i].cost = new_cost
@@ -164,7 +164,7 @@ class RRTStar:
                 # (i.e., goal cell is free and the segment to goal is collision-free).
                 try_connect_goal = False
                 if self.env.is_free(self.goal[0], self.goal[1]):
-                    if self.env.is_collision_free((new_x, new_y), self.goal):
+                    if self.env.is_straight_collision_free((new_x, new_y), self.goal):
                         try_connect_goal = True
 
                 if try_connect_goal:
@@ -187,7 +187,7 @@ class RRTStar:
         best_dist = float('inf')
         for i, n in enumerate(self.nodes):
             d = self.distance((n.x, n.y), self.goal)
-            if d < best_dist and self.env.is_collision_free((n.x, n.y), self.goal) and self.env.is_free(self.goal[0], self.goal[1]):
+            if d < best_dist and self.env.is_straight_collision_free((n.x, n.y), self.goal) and self.env.is_free(self.goal[0], self.goal[1]):
                 best_dist = d
                 best_idx = i
 

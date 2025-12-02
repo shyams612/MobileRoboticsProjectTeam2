@@ -20,9 +20,9 @@ class RRTStarDubins:
                  env,
                  step_size: float = 2.0,
                  goal_radius: float = 2.0,
-                 max_iters: int = 10000,
-                 rewire_radius: float = 6.0,
-                 turning_radius: float = 2.0,
+                 max_iters: int = 25000,
+                 rewire_radius: float = 8.0, # changed from 6
+                 turning_radius: float = 1.0,
                  goal_sample_rate: float = 0.1):
         """
         RRT* for Ackermann car using Dubins paths
@@ -64,7 +64,7 @@ class RRTStarDubins:
         return path.path_length()
 
     def nearest_node_index(self, point):
-        dists = [self.distance(node, point) for node in self.nodes]
+        dists = [self.distance(node, point) for node in self.nodes] # dubins distance
         return int(np.argmin(dists))
 
     def sample_point(self):
@@ -103,34 +103,21 @@ class RRTStarDubins:
         return neighbors
 
     # --------------------------
-    # Collision checking
-    # --------------------------
-
-    def is_collision_free(self, from_node, to_node):
-        q0 = (from_node.x, from_node.y, from_node.theta)
-        q1 = (to_node.x, to_node.y, to_node.theta)
-        path = dubins.shortest_path(q0, q1, self.turning_radius)
-        # Sample along Dubins path
-        sample_distance = 0.5
-        for i in np.arange(0, path.path_length(), sample_distance):
-            x, y, theta = path.sample(i)
-            if not self.env.is_free(x, y):
-                return False
-        return True
-
-    # --------------------------
     # Main search
     # --------------------------
 
     def search(self):
         for it in range(self.max_iters):
+            if it % 1000 == 0:
+                print(f"Current Iteration: {it}")
+            
             rand_node = self.sample_point()
             nearest_idx = self.nearest_node_index(rand_node)
             nearest_node = self.nodes[nearest_idx]
 
             new_node = self.steer(nearest_node, rand_node)
 
-            if not self.is_collision_free(nearest_node, new_node):
+            if not self.env.is_dubins_collision_free(nearest_node, new_node, self.turning_radius):
                 continue
 
             # Cost and parent selection
@@ -140,7 +127,7 @@ class RRTStarDubins:
 
             for i in neighbors:
                 n = self.nodes[i]
-                if self.is_collision_free(n, new_node):
+                if self.env.is_dubins_collision_free(n, new_node, self.turning_radius):
                     cost = n.cost + self.distance(n, new_node)
                     if cost < best_cost:
                         best_parent = i
@@ -159,19 +146,19 @@ class RRTStarDubins:
             for i in neighbors:
                 n = self.nodes[i]
                 new_cost = new_node.cost + self.distance(new_node, n)
-                if new_cost < n.cost and self.is_collision_free(new_node, n):
+                if new_cost < n.cost and self.env.is_dubins_collision_free(new_node, n, self.turning_radius):
                     n.parent = len(self.nodes) - 1
                     n.cost = new_cost
 
-            # Check goal
-            dx = new_node.x - self.goal.x
-            dy = new_node.y - self.goal.y
-            if np.hypot(dx, dy) < self.goal_radius:
-                self.goal.parent = len(self.nodes) - 1
-                self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
-                self.nodes.append(self.goal)
-                print(f"Goal reached at iteration {it}")
-                return self.reconstruct_path(len(self.nodes) - 1)
+            euclidean_dist = np.hypot(new_node.x - self.goal.x, new_node.y - self.goal.y)
+            if euclidean_dist < self.goal_radius:
+                # Verify Dubins connection is possible
+                if self.env.is_dubins_collision_free(new_node, self.goal, self.turning_radius):
+                    self.goal.parent = len(self.nodes) - 1
+                    self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
+                    self.nodes.append(self.goal)
+                    print(f"Goal reached at iteration {it}")
+                    return self.reconstruct_path(len(self.nodes) - 1)
         print("Goal NOT reached")
         return None
 
@@ -240,4 +227,3 @@ class RRTStarDubins:
         ax.set_title("RRT* with Dubins (Ackermann Vehicle)")
         ax.legend()
         plt.show()
-

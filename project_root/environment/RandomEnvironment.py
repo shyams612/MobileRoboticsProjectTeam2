@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Set
+from bresenham import bresenham
+import dubins
 from dataclasses import dataclass
 
 # ============================================
@@ -10,7 +12,7 @@ from dataclasses import dataclass
 class RandomEnvironment:
     """Simple Random environment for path planning"""
     
-    def __init__(self, width: int = 50, height: int = 50, density: int = 30, seed: int = None):
+    def __init__(self, width: int = 50, height: int = 50, density: int = 30, seed: int = None, robot_radius: float = 2.0):
         """
         Create a random environment with obstacles
         
@@ -29,6 +31,7 @@ class RandomEnvironment:
         self.height = height
         self.density = density
         self.seed = seed
+        self.robot_radius = robot_radius
         
         # Grid: 0 = free, 1 = obstacle
         self.grid = np.zeros((height, width), dtype=int)
@@ -50,7 +53,7 @@ class RandomEnvironment:
     
     def is_free(self, x: float, y: float) -> bool:
         """
-        Check if a point is free (not an obstacle)
+        Check if a point is free (not an obstacle), considering robot radius
         
         Parameters:
         -----------
@@ -63,15 +66,40 @@ class RandomEnvironment:
         """
         x_int = int(round(x))
         y_int = int(round(y))
-        
+
+        # Check bounds for center point
         if x_int < 0 or x_int >= self.width or y_int < 0 or y_int >= self.height:
             return False
-        
-        return self.grid[y_int, x_int] == 0
-    
-    def is_collision_free(self, pos_a: Tuple[float, float], pos_b: Tuple[float, float]) -> bool:
+
+        # Check all cells within robot radius
+        radius_cells = int(np.ceil(self.robot_radius))
+
+        # Define bounds once
+        min_x = max(0,           int(round(x - radius_cells)))
+        max_x = min(self.width,  int(round(x + radius_cells + 1)))
+        min_y = max(0,           int(round(y - radius_cells)))
+        max_y = min(self.height, int(round(y + radius_cells + 1)))
+
+        # Pre-compute radius squared to avoid sqrt in loop
+        radius_sq = self.robot_radius ** 2
+
+        # Check region using array slicing
+        for dy in range(min_y - y_int, max_y - y_int):
+            for dx in range(min_x - x_int, max_x - x_int):
+                # Use squared distance to avoid sqrt
+                if dx*dx + dy*dy <= radius_sq:
+                    check_x = x_int + dx
+                    check_y = y_int + dy
+                    
+                    # Check if obstacle
+                    if self.grid[check_y, check_x] == 1:
+                        return False
+
+        return True
+ 
+    def is_straight_collision_free(self, pos_a: Tuple[float, float], pos_b: Tuple[float, float], method: str = '') -> bool:
         """
-        Check if line segment between two points is collision-free
+        Check if line segment between two points is collision-free using grid traversal
         
         Parameters:
         -----------
@@ -79,34 +107,65 @@ class RandomEnvironment:
             Start position
         pos_b : tuple (x, y)
             End position
+        method : str
+            'bresenham' - standard Bresenham (faster, may miss some cells)
             
         Returns:
         --------
         bool : True if line is collision-free, False otherwise
         """
-        x1, y1 = pos_a
-        x2, y2 = pos_b
+        x0, y0 = pos_a
+        x1, y1 = pos_b
         
-        # Calculate distance and number of checks
-        distance = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-        num_checks = max(int(distance * 2), 10)
+        # Get all cells crossed by the line
+        if method == 'bresenham':
+            # Convert to grid coordinates
+            x0_grid = int(round(x0))
+            y0_grid = int(round(y0))
+            x1_grid = int(round(x1))
+            y1_grid = int(round(y1))
+            cells = bresenham(x0_grid, y0_grid, x1_grid, y1_grid)
+
+            # Check if any cell is an obstacle or out of bounds
+            for x, y in cells:
+                if x < 0 or x >= self.width or y < 0 or y >= self.height or self.grid[y, x] == 1:
+                    return False
+            return True
         
-        # Check points along the line
-        for i in range(num_checks + 1):
-            t = i / num_checks
-            x = x1 + t * (x2 - x1)
-            y = y1 + t * (y2 - y1)
+        else: 
+            # Calculate distance and number of checks
+            distance = np.sqrt((x1 - x0)**2 + (y1 - y0)**2)
+            num_checks = max(int(distance * 2), 10)
             
+            # Check points along the line
+            for i in range(num_checks + 1):
+                t = i / num_checks
+                x = x1 + t * (x1 - x0)
+                y = y1 + t * (y1 - y0)
+                
+                if not self.is_free(x, y):
+                    return False
+            
+        return True
+        
+    def is_dubins_collision_free(self, from_node, to_node, turning_radius):
+        q0 = (from_node.x, from_node.y, from_node.theta)
+        q1 = (to_node.x, to_node.y, to_node.theta)
+        path = dubins.shortest_path(q0, q1, turning_radius)
+        
+        # Sample along Dubins path
+        sample_distance = 0.5
+        for i in np.arange(0, path.path_length(), sample_distance):
+            x, y, _ = path.sample(i)
             if not self.is_free(x, y):
                 return False
-        
         return True
     
     def sample_free_point(self, max_attempts=1000) -> Tuple[float, float]:
         """Sample a random free point in the environment"""
         for _ in range(max_attempts):
-            x = np.random.uniform(0, self.width)
-            y = np.random.uniform(0, self.height)
+            x = np.random.uniform(0+self.robot_radius, self.width-self.robot_radius)
+            y = np.random.uniform(0+self.robot_radius, self.height-self.robot_radius)
             if self.is_free(x, y):
                 return (x, y)
         
@@ -208,4 +267,3 @@ if __name__ == "__main__":
     # Visualize just the environment
     print("\n2. Visualizing environment...")
     env.visualize()
-    
