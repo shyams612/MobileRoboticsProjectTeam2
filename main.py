@@ -9,12 +9,12 @@ import math
 if __name__ == "__main__":
     # Create random environment
     # env = RandomEnvironment(width=50, height=50, density=2, seed=42)
-    env = CorridorEnvironment(width=50, height=50, corridor_width=12, num_corridors=5, seed=400)
+    # # env = CorridorEnvironment(width=50, height=50, corridor_width=12, num_corridors=5, seed=400)
 
-    print("\n1. Creating corridor environment...")
+    # # print("\n1. Creating corridor environment...")
     # print(f"   Environment created: {env.width}x{env.height}, density={env.density}%")
-    # Visualize just the environment
-    env.visualize()
+    # # Visualize just the environment
+    # env.visualize()
 
     # # Sample usage for planner
     # print("*"*30)
@@ -34,9 +34,14 @@ if __name__ == "__main__":
     # print("\n1. Creating corridor environment...")
 
     # Sample usage for planner
+    env = RandomEnvironment(width=50, height=50, density=5, seed=100)
+    print(f"   Environment created: {env.width}x{env.height}, density={env.density}%")
+    # Visualize just the environment
+    env.visualize()
+
     print("*"*30)
-    start = env.sample_free_point()
-    goal = env.sample_free_point()
+    start = (10, 15)
+    goal = (40, 40)
     print("Starting point:", start, "Goal point:", goal)
     print("Running RRT* planner...")
     plannerA = RRTStar(start=start, goal=goal, env=env)
@@ -46,7 +51,7 @@ if __name__ == "__main__":
     print("*"*30)
     print("Running RRT* Dubins planner...")
     start1 = tuple(list(start) + [0])
-    goal1 = tuple(list(goal) + [math.pi/2])
-    plannerB = RRTStarDubins(start=start1, goal=goal1, env=env)
+    goal1 = tuple(list(goal) + [0])
+    plannerB = RRTStarDubins(start=start1, goal=goal1, env=env, max_iters=10000)
     path = plannerB.search()
     plannerB.show_path() 

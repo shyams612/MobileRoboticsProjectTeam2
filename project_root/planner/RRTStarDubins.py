@@ -164,7 +164,9 @@ class RRTStarDubins:
                     n.cost = new_cost
 
             # Check goal
-            if self.distance(new_node, self.goal) < self.goal_radius:
+            dx = new_node.x - self.goal.x
+            dy = new_node.y - self.goal.y
+            if np.hypot(dx, dy) < self.goal_radius:
                 self.goal.parent = len(self.nodes) - 1
                 self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
                 self.nodes.append(self.goal)
