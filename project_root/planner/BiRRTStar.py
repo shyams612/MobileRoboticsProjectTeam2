@@ -21,9 +21,10 @@ class BidirectionalRRTStar:
                  goal: Tuple[float, float],
                  env: RandomEnvironment,
                  step_size: float = 1.0,
-                 max_iters: int = 25000,
+                 max_iters: int = 5000,
                  connection_threshold: float = 1.5,
-                 search_radius: float = 3.0): 
+                 search_radius: float = 3.0,
+                 early_stop: bool = True): 
 
         self.start = start
         self.goal = goal
@@ -33,6 +34,7 @@ class BidirectionalRRTStar:
         self.max_iters = max_iters
         self.connection_threshold = connection_threshold
         self.search_radius = search_radius
+        self.early_stop = early_stop  # NEW: controls stopping behavior
         
         # Two trees: one from start, one from goal
         self.start_tree: List[Node] = [
@@ -44,6 +46,8 @@ class BidirectionalRRTStar:
         
         # Path will be stored after search
         self.final_path = None
+        self.best_path = None  # NEW: track best path found so far
+        self.best_cost = float('inf')  # NEW: track best path cost
         self.start_edges = []  # Edges from start tree
         self.goal_edges = []   # Edges from goal tree
 
@@ -113,9 +117,58 @@ class BidirectionalRRTStar:
         
         return best_parent, min_cost
 
+    def rewire(self, tree: List[Node], new_idx: int, near_indices, edge_list):
+        """
+        Rewire the tree: check if routing through new node improves cost for nearby nodes.
+        This is a key component of RRT* for optimality.
+        """
+        new_node = tree[new_idx]
+        
+        for idx in near_indices:
+            if idx == new_idx or idx == new_node.parent:
+                continue
+                
+            node = tree[idx]
+            edge_cost = self.distance((new_node.x, new_node.y), (node.x, node.y))
+            potential_cost = new_node.cost + edge_cost
+            
+            # If routing through new_node is better
+            if potential_cost < node.cost:
+                if self.env.is_straight_collision_free((new_node.x, new_node.y),
+                                                      (node.x, node.y)):
+                    # Remove old edge from visualization
+                    if node.parent is not None:
+                        old_parent = tree[node.parent]
+                        old_edge = ((old_parent.x, old_parent.y), (node.x, node.y))
+                        if old_edge in edge_list:
+                            edge_list.remove(old_edge)
+                    
+                    # Update parent and cost
+                    node.parent = new_idx
+                    node.cost = potential_cost
+                    
+                    # Add new edge
+                    edge_list.append(((new_node.x, new_node.y), (node.x, node.y)))
+                    
+                    # Recursively update costs of descendants
+                    self._update_descendants_cost(tree, idx)
+
+    def _update_descendants_cost(self, tree: List[Node], parent_idx: int):
+        """
+        Recursively update costs of all descendants after rewiring.
+        """
+        parent_node = tree[parent_idx]
+        
+        for i, node in enumerate(tree):
+            if node.parent == parent_idx:
+                edge_cost = self.distance((parent_node.x, parent_node.y),
+                                        (node.x, node.y))
+                node.cost = parent_node.cost + edge_cost
+                self._update_descendants_cost(tree, i)
+
     def extend_tree_star(self, tree: List[Node], target_point, edge_list):
         """
-        RRT* extension: find best parent.
+        RRT* extension: find best parent and rewire nearby nodes.
         Returns the index of the new node if successful, None otherwise.
         """
         # Find nearest node in tree
@@ -156,6 +209,9 @@ class BidirectionalRRTStar:
         # Store edge for visualization
         edge_list.append(((parent_node.x, parent_node.y), (new_x, new_y)))
         
+        # Rewire: check if nearby nodes should use new_node as parent
+        self.rewire(tree, new_index, near_indices, edge_list)
+        
         return new_index
 
     def connect_trees(self, tree1: List[Node], tree2: List[Node], 
@@ -180,7 +236,15 @@ class BidirectionalRRTStar:
     # --------------------------
 
     def search(self):
+        """
+        Main bidirectional RRT* search algorithm.
+        If early_stop=True, returns first valid path found.
+        If early_stop=False, continues searching to find better paths.
+        """
         for it in range(self.max_iters):
+            if not it % 1000:
+                print(f"Current Iteration: {it}")
+
             # Sample random point
             rand_point = self.sample_point()
 
@@ -201,7 +265,6 @@ class BidirectionalRRTStar:
                     # Check if trees can be connected
                     if self.connect_trees(self.start_tree, self.goal_tree,
                                         new_start_idx, new_goal_idx):
-                        print(f"Trees connected at iteration {it}")
                         connection_cost = self.distance(
                             (self.start_tree[new_start_idx].x, 
                              self.start_tree[new_start_idx].y),
@@ -211,15 +274,31 @@ class BidirectionalRRTStar:
                         total_cost = (self.start_tree[new_start_idx].cost + 
                                      self.goal_tree[new_goal_idx].cost + 
                                      connection_cost)
-                        print(f"Path cost: {total_cost:.2f}")
-                        return self.reconstruct_path(new_start_idx, new_goal_idx)
+                        
+                        # Check if this is the best path found
+                        if total_cost < self.best_cost:
+                            self.best_cost = total_cost
+                            self.best_path = self.reconstruct_path(new_start_idx, 
+                                                                   new_goal_idx)
+                            print(f"Trees connected at iteration {it}")
+                            print(f"Path cost: {total_cost:.2f}")
+                            
+                            if self.early_stop:
+                                self.final_path = self.best_path
+                                return self.final_path
 
             # Swap trees (alternate which tree extends first)
             self.start_tree, self.goal_tree = self.goal_tree, self.start_tree
             self.start_edges, self.goal_edges = self.goal_edges, self.start_edges
 
-        print("Goal NOT reached")
-        return None
+        # Return best path found (if any)
+        if self.best_path is not None:
+            print(f"Search complete. Best path cost: {self.best_cost:.2f}")
+            self.final_path = self.best_path
+        else:
+            print("Goal NOT reached")
+        
+        return self.final_path
 
     # --------------------------
     # Path reconstruction
@@ -251,12 +330,12 @@ class BidirectionalRRTStar:
         # Check which tree is actually the start tree
         if self.distance(path_from_start[0], self.start) < 0.01:
             # start_tree is actually from start
-            self.final_path = path_from_start + path_from_goal
+            path = path_from_start + path_from_goal
         else:
             # Trees were swapped, so reverse
-            self.final_path = list(reversed(path_from_goal)) + list(reversed(path_from_start))
+            path = list(reversed(path_from_goal)) + list(reversed(path_from_start))
         
-        return self.final_path
+        return path
 
     # --------------------------
     # Visualization
@@ -289,6 +368,9 @@ class BidirectionalRRTStar:
         ax.set_xlim(0, self.env.width)
         ax.set_ylim(0, self.env.height)
         ax.set_aspect('equal')
-        ax.set_title("Bidirectional RRT* Path Planning")
+        title = f"Bidirectional RRT* Path Planning"
+        if self.final_path:
+            title += f" (Cost: {self.best_cost:.2f})"
+        ax.set_title(title)
         ax.legend()
         plt.show()

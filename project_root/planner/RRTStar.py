@@ -24,8 +24,9 @@ class RRTStar:
                  env: RandomEnvironment,
                  step_size: float = 1.5,
                  goal_radius: float = 2.0,
-                 max_iters: int = 2000,
-                 rewire_radius: float = 4.0):
+                 max_iters: int = 5000,
+                 rewire_radius: float = 4.0,
+                 early_stop: bool = True):
 
         self.start = start
         self.goal = goal
@@ -37,6 +38,7 @@ class RRTStar:
         self.goal_sample_rate = 0.05
         self.max_iters = max_iters
         self.rewire_radius = rewire_radius
+        self.early_stop = early_stop
         
         # Node list
         self.nodes: List[Node] = [
@@ -46,6 +48,7 @@ class RRTStar:
         # Path will be stored after search
         self.final_path = None
         self.all_edges = []  # For visualization
+        self.goal_node_idx = None  # Track if/when goal is added to tree
 
     # --------------------------
     # Utility
@@ -97,6 +100,8 @@ class RRTStar:
 
     def search(self):
         for it in range(self.max_iters):
+            if not it % 1000:
+                print(f"Current Iteration: {it}")
 
             # 1. Sample random point
             rand_point = self.sample_point()
@@ -161,27 +166,49 @@ class RRTStar:
             # 6. Check if goal reached (within goal region)
             if self.distance((new_x, new_y), self.goal) < self.goal_radius:
                 # Prefer snapping to the exact goal point when possible
-                # (i.e., goal cell is free and the segment to goal is collision-free).
                 try_connect_goal = False
                 if self.env.is_free(self.goal[0], self.goal[1]):
                     if self.env.is_straight_collision_free((new_x, new_y), self.goal):
                         try_connect_goal = True
 
                 if try_connect_goal:
-                    goal_node = Node(self.goal[0], self.goal[1], parent=new_index,
-                                     cost=new_node.cost + self.distance((new_x, new_y), self.goal))
-                    goal_index = len(self.nodes)
-                    self.nodes.append(goal_node)
-                    # store final edge for visualization
-                    self.all_edges.append(((new_x, new_y), (self.goal[0], self.goal[1])))
-                    print(f"Goal reached and snapped to exact goal at iteration {it}")
-                    return self.reconstruct_path(goal_index)
+                    goal_cost = new_node.cost + self.distance((new_x, new_y), self.goal)
+                    
+                    # If goal not yet in tree, add it
+                    if self.goal_node_idx is None:
+                        goal_node = Node(self.goal[0], self.goal[1], parent=new_index, cost=goal_cost)
+                        goal_index = len(self.nodes)
+                        self.nodes.append(goal_node)
+                        self.goal_node_idx = goal_index
+                        self.all_edges.append(((new_x, new_y), (self.goal[0], self.goal[1])))
+                        print(f"Goal reached and snapped to exact goal at iteration {it} with cost {goal_cost:.2f}")
+                        
+                        # Early stop if enabled
+                        if self.early_stop:
+                            print("Early stopping enabled - terminating search")
+                            return self.reconstruct_path(goal_index)
+                    
+                    # If goal already in tree, check if this is a better connection
+                    elif goal_cost < self.nodes[self.goal_node_idx].cost:
+                        self.nodes[self.goal_node_idx].parent = new_index
+                        self.nodes[self.goal_node_idx].cost = goal_cost
+                        print(f"Goal path improved at iteration {it} with cost {goal_cost:.2f}")
+                        
                 else:
-                    # If exact goal cannot be connected due to collision, still return
-                    # the path to the node inside the goal region (existing behavior).
-                    print(f"Goal region reached at iteration {it} (goal not directly connectable)")
-                    return self.reconstruct_path(new_index)
+                    # Goal region reached but exact goal not connectable
+                    # Only trigger early stop if we haven't found a better connection yet
+                    if self.goal_node_idx is None and self.early_stop:
+                        print(f"Goal region reached at iteration {it} (goal not directly connectable)")
+                        return self.reconstruct_path(new_index)
 
+        # After all iterations complete
+        print(f"Completed {self.max_iters} iterations")
+        
+        # If goal was reached during search, return that path
+        if self.goal_node_idx is not None:
+            print(f"Final goal cost: {self.nodes[self.goal_node_idx].cost:.2f}")
+            return self.reconstruct_path(self.goal_node_idx)
+        
         # Final attempt: try to connect any existing node to the exact goal
         best_idx = None
         best_dist = float('inf')
@@ -194,12 +221,13 @@ class RRTStar:
         if best_idx is not None:
             # append goal node
             goal_parent = best_idx
-            goal_node = Node(self.goal[0], self.goal[1], parent=goal_parent,
-                             cost=self.nodes[goal_parent].cost + self.distance((self.nodes[goal_parent].x, self.nodes[goal_parent].y), self.goal))
+            goal_cost = self.nodes[goal_parent].cost + self.distance((self.nodes[goal_parent].x, self.nodes[goal_parent].y), self.goal)
+            goal_node = Node(self.goal[0], self.goal[1], parent=goal_parent, cost=goal_cost)
             goal_index = len(self.nodes)
             self.nodes.append(goal_node)
+            self.goal_node_idx = goal_index
             self.all_edges.append(((self.nodes[goal_parent].x, self.nodes[goal_parent].y), (self.goal[0], self.goal[1])))
-            print("Goal connected in final attempt")
+            print(f"Goal connected in final attempt with cost {goal_cost:.2f}")
             return self.reconstruct_path(goal_index)
 
         print("Goal NOT reached")
@@ -246,6 +274,13 @@ class RRTStar:
         ax.set_xlim(0, self.env.width)
         ax.set_ylim(0, self.env.height)
         ax.set_aspect('equal')
-        ax.set_title("RRT* Path Planning")
+        
+        # Update title to reflect early_stop setting
+        title = "RRT* Path Planning"
+        if self.early_stop:
+            title += " [Early Stop: ON]"
+        else:
+            title += " [Early Stop: OFF]"
+        ax.set_title(title)
         ax.legend()
         plt.show()

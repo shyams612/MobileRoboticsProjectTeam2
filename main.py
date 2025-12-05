@@ -12,7 +12,7 @@ import math
 
 if __name__ == "__main__":
     # Create random environment
-    env = RandomEnvironment(width=100, height=100, density=0, seed=None, robot_radius=2.0)
+    env = RandomEnvironment(width=100, height=100, density=2, seed=None, robot_radius=2.0)
     # env = RandomEnvironment(width=50, height=50, density=20, seed=42)
     # env = CorridorEnvironment(width=50, height=50, corridor_width=12, num_corridors=5, seed=400)
     # env.visualize()
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # print("*"*30)
     # print("Starting point:", start, "Goal point:", goal)
     # print("Running RRT* planner...")
-    # planner = RRTStar(start=start, goal=goal, env=env)
+    # planner = RRTStar(start=start, goal=goal, env=env, early_stop=False)
     # path = planner.search()
     # planner.show_path() 
 
@@ -35,14 +35,14 @@ if __name__ == "__main__":
     # print("Running RRT* Dubins planner...")
     # start1 = tuple(list(start) + [0])
     # goal1 = tuple(list(goal) + [math.pi/2])
-    # planner = RRTStarDubins(start=start1, goal=goal1, env=env)
+    # planner = RRTStarDubins(start=start1, goal=goal1, env=env, early_stop=False)
     # path = planner.search()
     # planner.show_path() 
 
     print("*"*30)
     print("Starting point:", start, "Goal point:", goal)
     print("Running Bidirectional RRT planner...")
-    planner = BidirectionalRRTStar(start=start, goal=goal, env=env)
+    planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
     path = planner.search()
     planner.show_path() 
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # print("Running Bidirectional RRT Dubins planner...")
     # start1 = tuple(list(start) + [0])
     # goal1 = tuple(list(goal) + [math.pi/2])
-    # planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env)
+    # planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=False)
     # path = planner.search()
     # planner.show_path() 
 
@@ -61,9 +61,9 @@ if __name__ == "__main__":
     path = planner.search()
     planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running Improved Bidirectional RRT planner 2...")
-    planner = BiDirectionalRRTStarAPF(start=start, goal=goal, env=env)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running Improved Bidirectional RRT planner 2...")
+    # planner = BiDirectionalRRTStarAPF(start=start, goal=goal, env=env)
+    # path = planner.search()
+    # planner.show_path() 

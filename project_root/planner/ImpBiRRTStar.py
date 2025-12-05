@@ -236,14 +236,14 @@ class ImprovedBidirectionalRRTStar:
         # Blend APF direction with random direction
         # This creates P1_real from Figure 4
         alpha = 0.5  # weight for APF (can be tuned)
-        combined_dx = alpha * apf_direction[0] + (1 - alpha) * rand_direction[0]
-        combined_dy = alpha * apf_direction[1] + (1 - alpha) * rand_direction[1]
+        combined_dx = apf_direction[0] + rand_direction[0]
+        combined_dy = apf_direction[1] + rand_direction[1]
         
         # Normalize
-        combined_mag = np.hypot(combined_dx, combined_dy)
-        if combined_mag > 0.01:
-            combined_dx /= combined_mag
-            combined_dy /= combined_mag
+        # combined_mag = np.hypot(combined_dx, combined_dy)
+        # if combined_mag > 0.01:
+        #     combined_dx /= combined_mag
+        #     combined_dy /= combined_mag
         
         # Apply to get biased sampling point
         biased_x = nearest_node.x + combined_dx * self.step_size * 2

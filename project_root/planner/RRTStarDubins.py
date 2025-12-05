@@ -20,10 +20,11 @@ class RRTStarDubins:
                  env,
                  step_size: float = 2.0,
                  goal_radius: float = 2.0,
-                 max_iters: int = 25000,
-                 rewire_radius: float = 8.0, # changed from 6
+                 max_iters: int = 5000,
+                 rewire_radius: float = 8.0,
                  turning_radius: float = 1.0,
-                 goal_sample_rate: float = 0.1):
+                 goal_sample_rate: float = 0.1,
+                 early_stop: bool = False):
         """
         RRT* for Ackermann car using Dubins paths
         
@@ -33,10 +34,11 @@ class RRTStarDubins:
         env: environment object (must implement is_free and is_collision_free)
         step_size: maximum distance along Dubins path per extension
         goal_radius: radius to consider goal reached
-        max_iters: max iterations
+        max_iters: maximum number of iterations
         rewire_radius: radius for rewiring
         turning_radius: minimum turning radius for Dubins curves
         goal_sample_rate: probability of sampling goal to bias tree
+        early_stop: if True, stop when goal is first reached; if False, run for max_iters
         """
         self.start = DubinsNode(*start, parent=None, cost=0.0)
         self.goal = DubinsNode(*goal, parent=None, cost=0.0)
@@ -47,10 +49,12 @@ class RRTStarDubins:
         self.rewire_radius = rewire_radius
         self.turning_radius = turning_radius
         self.goal_sample_rate = goal_sample_rate
+        self.early_stop = early_stop
 
         self.nodes: List[DubinsNode] = [self.start]
         self.all_edges = []
         self.final_path = None
+        self.goal_node_idx = None  # Track if/when goal is added to tree
 
     # --------------------------
     # Utilities
@@ -64,7 +68,7 @@ class RRTStarDubins:
         return path.path_length()
 
     def nearest_node_index(self, point):
-        dists = [self.distance(node, point) for node in self.nodes] # dubins distance
+        dists = [self.distance(node, point) for node in self.nodes]
         return int(np.argmin(dists))
 
     def sample_point(self):
@@ -152,15 +156,36 @@ class RRTStarDubins:
 
             euclidean_dist = np.hypot(new_node.x - self.goal.x, new_node.y - self.goal.y)
             if euclidean_dist < self.goal_radius:
-                # Verify Dubins connection is possible
                 if self.env.is_dubins_collision_free(new_node, self.goal, self.turning_radius):
-                    self.goal.parent = len(self.nodes) - 1
-                    self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
-                    self.nodes.append(self.goal)
-                    print(f"Goal reached at iteration {it}")
-                    return self.reconstruct_path(len(self.nodes) - 1)
-        print("Goal NOT reached")
-        return None
+                    goal_cost = new_node.cost + self.distance(new_node, self.goal)
+                    
+                    # If goal not yet in tree, add it
+                    if self.goal_node_idx is None:
+                        self.goal.parent = len(self.nodes) - 1
+                        self.goal.cost = goal_cost
+                        self.nodes.append(self.goal)
+                        self.goal_node_idx = len(self.nodes) - 1
+                        print(f"Goal first reached at iteration {it} with cost {goal_cost:.2f}")
+                        
+                        # Early stop if enabled
+                        if self.early_stop:
+                            print("Early stopping enabled - terminating search")
+                            return self.reconstruct_path(self.goal_node_idx)
+                    
+                    # If goal already in tree, check if this is a better connection
+                    elif goal_cost < self.nodes[self.goal_node_idx].cost:
+                        self.nodes[self.goal_node_idx].parent = len(self.nodes) - 1
+                        self.nodes[self.goal_node_idx].cost = goal_cost
+                        print(f"Goal path improved at iteration {it} with cost {goal_cost:.2f}")
+        
+        # After all iterations complete
+        print(f"Completed {self.max_iters} iterations")
+        if self.goal_node_idx is not None:
+            print(f"Final goal cost: {self.nodes[self.goal_node_idx].cost:.2f}")
+            return self.reconstruct_path(self.goal_node_idx)
+        else:
+            print("Goal was never reached")
+            return None
 
     # --------------------------
     # Reconstruct path
@@ -224,6 +249,13 @@ class RRTStarDubins:
         ax.set_xlim(0, self.env.width)
         ax.set_ylim(0, self.env.height)
         ax.set_aspect('equal')
-        ax.set_title("RRT* with Dubins (Ackermann Vehicle)")
+        
+        # Update title to reflect early_stop setting
+        title = "RRT* with Dubins (Ackermann Vehicle)"
+        if self.early_stop:
+            title += " [Early Stop: ON]"
+        else:
+            title += " [Early Stop: OFF]"
+        ax.set_title(title)
         ax.legend()
         plt.show()

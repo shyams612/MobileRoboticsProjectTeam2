@@ -23,11 +23,12 @@ class BidirectionalRRTStarDubins:
                  goal: Tuple[float, float, float],
                  env: RandomEnvironment,
                  step_size: float = 2.0,
-                 max_iters: int = 25000,
+                 max_iters: int = 5000,
                  connection_threshold: float = 3.5,
                  turning_radius: float = 1.0,
                  goal_sample_rate: float = 0.1,
-                 search_radius: float = 5.0):  # Radius for rewiring
+                 search_radius: float = 5.0,
+                 early_stop: bool = True):  # NEW: controls stopping behavior
 
         self.start = start
         self.goal = goal
@@ -39,6 +40,7 @@ class BidirectionalRRTStarDubins:
         self.turning_radius = turning_radius
         self.goal_sample_rate = goal_sample_rate
         self.search_radius = search_radius
+        self.early_stop = early_stop  # NEW: early stop parameter
         
         # Two trees: one from start, one from goal
         self.start_tree: List[DubinsNode] = [
@@ -50,6 +52,8 @@ class BidirectionalRRTStarDubins:
         
         # Path will be stored after search
         self.final_path = None
+        self.best_path = None  # NEW: track best path found so far
+        self.best_cost = float('inf')  # NEW: track best path cost
         self.start_edges = []  # Edges from start tree
         self.goal_edges = []   # Edges from goal tree
 
@@ -154,9 +158,58 @@ class BidirectionalRRTStarDubins:
         
         return best_parent, min_cost
 
+    def rewire(self, tree: List[DubinsNode], new_idx: int, near_indices, edge_list):
+        """
+        Rewire the tree: check if routing through new node improves cost for nearby nodes.
+        This is a key component of RRT* for optimality.
+        """
+        new_node = tree[new_idx]
+        
+        for idx in near_indices:
+            if idx == new_idx or idx == new_node.parent:
+                continue
+                
+            node = tree[idx]
+            edge_cost = self.dubins_distance(new_node, node)
+            potential_cost = new_node.cost + edge_cost
+            
+            # If routing through new_node is better
+            if potential_cost < node.cost:
+                if self.env.is_dubins_collision_free(new_node, node, self.turning_radius):
+                    # Remove old edge from visualization
+                    if node.parent is not None:
+                        old_parent = tree[node.parent]
+                        old_edge = ((old_parent.x, old_parent.y, old_parent.theta), 
+                                   (node.x, node.y, node.theta))
+                        if old_edge in edge_list:
+                            edge_list.remove(old_edge)
+                    
+                    # Update parent and cost
+                    node.parent = new_idx
+                    node.cost = potential_cost
+                    
+                    # Add new edge
+                    edge_list.append(((new_node.x, new_node.y, new_node.theta), 
+                                     (node.x, node.y, node.theta)))
+                    
+                    # Recursively update costs of descendants
+                    self._update_descendants_cost(tree, idx)
+
+    def _update_descendants_cost(self, tree: List[DubinsNode], parent_idx: int):
+        """
+        Recursively update costs of all descendants after rewiring.
+        """
+        parent_node = tree[parent_idx]
+        
+        for i, node in enumerate(tree):
+            if node.parent == parent_idx:
+                edge_cost = self.dubins_distance(parent_node, node)
+                node.cost = parent_node.cost + edge_cost
+                self._update_descendants_cost(tree, i)
+
     def extend_tree_star(self, tree: List[DubinsNode], target_point, edge_list):
         """
-        RRT* extension with Dubins paths: find best parent.
+        RRT* extension with Dubins paths: find best parent and rewire nearby nodes.
         Returns the index of the new node if successful, None otherwise.
         """
         # Find nearest node in tree
@@ -193,6 +246,9 @@ class BidirectionalRRTStarDubins:
         edge_list.append(((parent_node.x, parent_node.y, parent_node.theta), 
                          (new_x, new_y, new_theta)))
         
+        # Rewire: check if nearby nodes should use new_node as parent
+        self.rewire(tree, new_index, near_indices, edge_list)
+        
         return new_index
 
     def connect_trees(self, tree1: List[DubinsNode], tree2: List[DubinsNode], 
@@ -221,9 +277,15 @@ class BidirectionalRRTStarDubins:
     # --------------------------
 
     def search(self):
+        """
+        Main bidirectional RRT* search algorithm with Dubins paths.
+        If early_stop=True, returns first valid path found.
+        If early_stop=False, continues searching to find better paths.
+        """
         for it in range(self.max_iters):
             if it % 1000 == 0:
                 print(f"Current Iteration: {it}")
+            
             # Sample random point
             rand_point = self.sample_point()
 
@@ -244,7 +306,6 @@ class BidirectionalRRTStarDubins:
                     # Check if trees can be connected
                     if self.connect_trees(self.start_tree, self.goal_tree,
                                         new_start_idx, new_goal_idx):
-                        print(f"Trees connected at iteration {it}")
                         connection_cost = self.dubins_distance(
                             self.start_tree[new_start_idx],
                             self.goal_tree[new_goal_idx]
@@ -252,15 +313,31 @@ class BidirectionalRRTStarDubins:
                         total_cost = (self.start_tree[new_start_idx].cost + 
                                      self.goal_tree[new_goal_idx].cost + 
                                      connection_cost)
-                        print(f"Path cost: {total_cost:.2f}")
-                        return self.reconstruct_path(new_start_idx, new_goal_idx)
+                        
+                        # Check if this is the best path found
+                        if total_cost < self.best_cost:
+                            self.best_cost = total_cost
+                            self.best_path = self.reconstruct_path(new_start_idx, 
+                                                                   new_goal_idx)
+                            print(f"Trees connected at iteration {it}")
+                            print(f"Path cost: {total_cost:.2f}")
+                            
+                            if self.early_stop:
+                                self.final_path = self.best_path
+                                return self.final_path
 
             # Swap trees (alternate which tree extends first)
             self.start_tree, self.goal_tree = self.goal_tree, self.start_tree
             self.start_edges, self.goal_edges = self.goal_edges, self.start_edges
 
-        print("Goal NOT reached")
-        return None
+        # Return best path found (if any)
+        if self.best_path is not None:
+            print(f"Search complete. Best path cost: {self.best_cost:.2f}")
+            self.final_path = self.best_path
+        else:
+            print("Goal NOT reached")
+        
+        return self.final_path
 
     # --------------------------
     # Path reconstruction
@@ -294,12 +371,12 @@ class BidirectionalRRTStarDubins:
         start_dist = self.euclidean_distance(path_from_start[0], self.start)
         if start_dist < 0.01:
             # start_tree is actually from start
-            self.final_path = path_from_start + path_from_goal
+            path = path_from_start + path_from_goal
         else:
             # Trees were swapped, so reverse
-            self.final_path = list(reversed(path_from_goal)) + list(reversed(path_from_start))
+            path = list(reversed(path_from_goal)) + list(reversed(path_from_start))
         
-        return self.final_path
+        return path
 
     # --------------------------
     # Visualization
@@ -351,6 +428,9 @@ class BidirectionalRRTStarDubins:
         ax.set_xlim(0, self.env.width)
         ax.set_ylim(0, self.env.height)
         ax.set_aspect('equal')
-        ax.set_title("Bidirectional RRT* with Dubins Paths (Ackermann Vehicle)")
+        title = "Bidirectional RRT* with Dubins Paths (Ackermann Vehicle)"
+        if self.final_path:
+            title += f" (Cost: {self.best_cost:.2f})"
+        ax.set_title(title)
         ax.legend()
         plt.show()
