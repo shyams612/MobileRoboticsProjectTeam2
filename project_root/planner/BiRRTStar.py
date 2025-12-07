@@ -58,8 +58,37 @@ class BidirectionalRRTStar:
     def distance(self, a, b):
         return np.hypot(a[0] - b[0], a[1] - b[1])
 
-    def sample_point(self):
-        return self.env.sample_free_point()
+    # def sample_point(self):
+    #     return self.env.sample_free_point()
+
+    def sample_point(self, target_tree: List[Node] = None, bias_prob: float = 0.3):
+        """
+        Sample a point with optional bias toward the other tree
+        
+        Parameters:
+        -----------
+        target_tree : List[Node], optional
+            The other tree to bias sampling toward
+        bias_prob : float
+            Probability of biased sampling (default 0.3)
+        """
+        if target_tree is not None and np.random.random() < bias_prob:
+            # Sample toward a random node in the other tree
+            random_idx = np.random.randint(len(target_tree))
+            target_node = target_tree[random_idx]
+            
+            # Add small noise to avoid exact overlap
+            noise_range = self.step_size * 0.5
+            noise_x = np.random.uniform(-noise_range, noise_range)
+            noise_y = np.random.uniform(-noise_range, noise_range)
+            
+            x = np.clip(target_node.x + noise_x, 0, self.env.width)
+            y = np.clip(target_node.y + noise_y, 0, self.env.height)
+            
+            return (x, y)
+        else:
+            # Standard uniform random sampling
+            return self.env.sample_free_point()
 
     def nearest_node_index(self, tree: List[Node], point):
         dists = [(node.x - point[0])**2 + (node.y - point[1])**2
@@ -246,11 +275,11 @@ class BidirectionalRRTStar:
                 print(f"Current Iteration: {it}")
 
             # Sample random point
-            rand_point = self.sample_point()
-
-            # Extend start tree toward random point (with RRT* optimization)
+            rand_point = self.sample_point(target_tree=self.goal_tree, bias_prob=0.3)
+        
+            # Extend start tree
             new_start_idx = self.extend_tree_star(self.start_tree, rand_point, 
-                                                 self.start_edges)
+                                                self.start_edges)
             
             if new_start_idx is not None:
                 # Try to connect goal tree to the new node in start tree

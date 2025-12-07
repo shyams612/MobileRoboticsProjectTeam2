@@ -72,28 +72,35 @@ class RRTStarDubins:
         return int(np.argmin(dists))
 
     def sample_point(self):
-        """Randomly sample (x,y,theta) in environment"""
+        """Sample (x,y,theta) with informed heading"""
         if np.random.rand() < self.goal_sample_rate:
             return self.goal
         else:
             x, y = self.env.sample_free_point()
-            theta = np.random.uniform(-np.pi, np.pi)
+            
+            # Compute heading toward goal with exploration noise
+            goal_direction = np.arctan2(self.goal.y - y, self.goal.x - x)
+            
+            # 80% bias toward goal, 20% random exploration
+            if np.random.rand() < 0.8:
+                theta = goal_direction + np.random.uniform(-np.pi/4, np.pi/4)
+            else:
+                theta = np.random.uniform(-np.pi, np.pi)
+            
             return DubinsNode(x, y, theta, parent=None, cost=0.0)
 
     def steer(self, from_node: DubinsNode, to_node: DubinsNode):
         """
         Return a new node along Dubins path from from_node toward to_node
-        with maximum step_size distance.
         """
         q0 = (from_node.x, from_node.y, from_node.theta)
         q1 = (to_node.x, to_node.y, to_node.theta)
+        
         path = dubins.shortest_path(q0, q1, self.turning_radius)
 
-        # Sample along the Dubins path
         if path.path_length() <= self.step_size:
             new_config = q1
         else:
-            # Sample configuration at distance step_size
             new_config = path.sample(self.step_size)
 
         return DubinsNode(x=new_config[0], y=new_config[1],

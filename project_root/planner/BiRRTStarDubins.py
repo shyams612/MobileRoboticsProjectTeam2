@@ -74,13 +74,59 @@ class BidirectionalRRTStarDubins:
         bx, by = (b.x, b.y) if isinstance(b, DubinsNode) else (b[0], b[1])
         return np.hypot(ax - bx, ay - by)
 
-    def sample_point(self):
-        """Sample random configuration with heading"""
+    # def sample_point(self):
+    #     """Sample random configuration with heading"""
+    #     if np.random.rand() < self.goal_sample_rate:
+    #         return self.goal
+    #     else:
+    #         x, y = self.env.sample_free_point()
+    #         # Compute heading toward a reference point for more natural directions
+    #         ref_x = (self.start[0] + self.goal[0]) / 2
+    #         ref_y = (self.start[1] + self.goal[1]) / 2
+    #         theta = np.arctan2(ref_y - y, ref_x - x) + np.random.uniform(-np.pi/4, np.pi/4)
+    #         return (x, y, theta)
+
+    def sample_point(self, target_tree: List[DubinsNode] = None, bias_prob: float = 0.3):
+        """
+        Sample a configuration with optional bias toward the other tree
+        
+        Parameters:
+        -----------
+        target_tree : List[DubinsNode], optional
+            The other tree to bias sampling toward
+        bias_prob : float
+            Probability of biased sampling (default 0.3)
+        """
+        # Goal biasing (higher priority)
         if np.random.rand() < self.goal_sample_rate:
             return self.goal
+        
+        # Bias toward other tree
+        if target_tree is not None and np.random.random() < bias_prob:
+            # Sample toward a random node in the other tree
+            random_idx = np.random.randint(len(target_tree))
+            target_node = target_tree[random_idx]
+            
+            # Add noise to position
+            noise_range = self.step_size * 0.5
+            noise_x = np.random.uniform(-noise_range, noise_range)
+            noise_y = np.random.uniform(-noise_range, noise_range)
+            
+            x = np.clip(target_node.x + noise_x, 0, self.env.width)
+            y = np.clip(target_node.y + noise_y, 0, self.env.height)
+            
+            # Option 1: Use target node's heading with small perturbation
+            theta = target_node.theta + np.random.uniform(-np.pi/6, np.pi/6)
+            
+            # Option 2: Compute heading toward target node (commented out)
+            # theta = np.arctan2(target_node.y - y, target_node.x - x)
+            
+            return (x, y, theta)
+        
+        # Standard uniform random sampling
         else:
             x, y = self.env.sample_free_point()
-            # Compute heading toward a reference point for more natural directions
+            # Compute heading toward midpoint for more natural directions
             ref_x = (self.start[0] + self.goal[0]) / 2
             ref_y = (self.start[1] + self.goal[1]) / 2
             theta = np.arctan2(ref_y - y, ref_x - x) + np.random.uniform(-np.pi/4, np.pi/4)
@@ -286,12 +332,12 @@ class BidirectionalRRTStarDubins:
             if it % 1000 == 0:
                 print(f"Current Iteration: {it}")
             
-            # Sample random point
-            rand_point = self.sample_point()
+            # Sample random point WITH BIAS toward goal tree
+            rand_point = self.sample_point(target_tree=self.goal_tree, bias_prob=0.3)
 
             # Extend start tree toward random point (with RRT* optimization)
             new_start_idx = self.extend_tree_star(self.start_tree, rand_point, 
-                                                 self.start_edges)
+                                                self.start_edges)
             
             if new_start_idx is not None:
                 # Try to connect goal tree to the new node in start tree
@@ -311,14 +357,14 @@ class BidirectionalRRTStarDubins:
                             self.goal_tree[new_goal_idx]
                         )
                         total_cost = (self.start_tree[new_start_idx].cost + 
-                                     self.goal_tree[new_goal_idx].cost + 
-                                     connection_cost)
+                                    self.goal_tree[new_goal_idx].cost + 
+                                    connection_cost)
                         
                         # Check if this is the best path found
                         if total_cost < self.best_cost:
                             self.best_cost = total_cost
                             self.best_path = self.reconstruct_path(new_start_idx, 
-                                                                   new_goal_idx)
+                                                                new_goal_idx)
                             print(f"Trees connected at iteration {it}")
                             print(f"Path cost: {total_cost:.2f}")
                             
