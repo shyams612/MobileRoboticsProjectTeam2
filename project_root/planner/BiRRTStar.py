@@ -22,8 +22,8 @@ class BidirectionalRRTStar:
                  env: RandomEnvironment,
                  step_size: float = 1.0,
                  max_iters: int = 5000,
-                 connection_threshold: float = 1.5,
-                 search_radius: float = 3.0,
+                 goal_radius: float = 1.5,
+                 neighbor_radius: float = 3.0,
                  early_stop: bool = True): 
 
         self.start = start
@@ -32,8 +32,8 @@ class BidirectionalRRTStar:
         
         self.step_size = step_size
         self.max_iters = max_iters
-        self.connection_threshold = connection_threshold
-        self.search_radius = search_radius
+        self.goal_radius = goal_radius
+        self.neighbor_radius = neighbor_radius
         self.early_stop = early_stop  # NEW: controls stopping behavior
         
         # Two trees: one from start, one from goal
@@ -183,7 +183,7 @@ class BidirectionalRRTStar:
             return None
 
         # Find near nodes
-        near_indices = self.near_nodes(tree, (new_x, new_y), self.search_radius)
+        near_indices = self.near_nodes(tree, (new_x, new_y), self.neighbor_radius)
         
         # Choose best parent from near nodes
         best_parent_idx, min_cost = self.choose_parent(tree, (new_x, new_y), 
@@ -225,7 +225,7 @@ class BidirectionalRRTStar:
         
         dist = self.distance((node1.x, node1.y), (node2.x, node2.y))
         
-        if dist <= self.connection_threshold:
+        if dist <= self.goal_radius:
             if self.env.is_straight_collision_free((node1.x, node1.y), 
                                          (node2.x, node2.y)):
                 return True

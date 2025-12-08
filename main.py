@@ -24,13 +24,15 @@ if __name__ == "__main__":
     start = env.sample_free_point()
     goal = env.sample_free_point()
 
+    save_plots = True
+
     # start = (10, 10)
     # goal = (90, 90)
 
     print("*"*30)
     print("Starting point:", start, "Goal point:", goal)
     print("Running RRT* planner...")
-    planner = RRTStar(start=start, goal=goal, env=env, early_stop=True)
+    planner = RRTStar(start=start, goal=goal, env=env, early_stop=True, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 
 
@@ -38,14 +40,14 @@ if __name__ == "__main__":
     print("Running RRT* Dubins planner...")
     start1 = tuple(list(start) + [0])
     goal1 = tuple(list(goal) + [math.pi/2])
-    planner = RRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
+    planner = RRTStarDubins(start=start1, goal=goal1, env=env, early_stop=False, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 
 
     print("*"*30)
     print("Starting point:", start, "Goal point:", goal)
     print("Running Bidirectional RRT planner...")
-    planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 
 
@@ -53,20 +55,20 @@ if __name__ == "__main__":
     print("Running Bidirectional RRT Dubins planner...")
     start1 = tuple(list(start) + [0])
     goal1 = tuple(list(goal) + [math.pi/2])
-    planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
+    planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=False, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 
 
     print("*"*30)
     print("Starting point:", start, "Goal point:", goal)
     print("Running P-RRT* planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 
 
     print("*"*30)
     print("Starting point:", start, "Goal point:", goal)
     print("Running P-RRT* Dubins planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True, save_plots=save_plots)
     path = planner.search()
     planner.show_path() 

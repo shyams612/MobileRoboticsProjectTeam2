@@ -25,7 +25,7 @@ class RRTStar:
                  step_size: float = 1.5,
                  goal_radius: float = 2.0,
                  max_iters: int = 5000,
-                 rewire_radius: float = 4.0,
+                 neighbor_radius: float = 4.0,
                  early_stop: bool = True):
 
         self.start = start
@@ -37,7 +37,7 @@ class RRTStar:
         # Probability of sampling the exact goal (goal bias)
         self.goal_sample_rate = 0.05
         self.max_iters = max_iters
-        self.rewire_radius = rewire_radius
+        self.neighbor_radius = neighbor_radius
         self.early_stop = early_stop
         
         # Node list
@@ -90,7 +90,7 @@ class RRTStar:
         """All nodes within rewire radius"""
         neighbors = []
         for i, node in enumerate(self.nodes):
-            if self.distance((node.x, node.y), (new_node.x, new_node.y)) <= self.rewire_radius:
+            if self.distance((node.x, node.y), (new_node.x, new_node.y)) <= self.neighbor_radius:
                 neighbors.append(i)
         return neighbors
 

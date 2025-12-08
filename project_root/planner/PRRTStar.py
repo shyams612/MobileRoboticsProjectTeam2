@@ -27,7 +27,7 @@ class PRRTStar:
                  step_size: float = 1.5,
                  goal_radius: float = 0.71, # srqt(2) / 2
                  max_iters: int = 5000,
-                 rewire_radius: float = 4.0,
+                 neighbor_radius: float = 4.0,
                  early_stop: bool = True,
 
                  # P-RRT* specific parameters (Section 4, page 6)
@@ -43,7 +43,7 @@ class PRRTStar:
         self.goal_radius = goal_radius
         self.goal_sample_rate = 0.05
         self.max_iters = max_iters
-        self.rewire_radius = rewire_radius
+        self.neighbor_radius = neighbor_radius
         self.early_stop = early_stop
         
         # P-RRT* specific parameters
@@ -93,7 +93,7 @@ class PRRTStar:
     def get_neighbors(self, new_node):
         neighbors = []
         for i, node in enumerate(self.nodes):
-            if self.distance((node.x, node.y), (new_node.x, new_node.y)) <= self.rewire_radius:
+            if self.distance((node.x, node.y), (new_node.x, new_node.y)) <= self.neighbor_radius:
                 neighbors.append(i)
         return neighbors
 
