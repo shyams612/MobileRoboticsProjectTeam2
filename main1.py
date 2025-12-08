@@ -881,8 +881,8 @@ class ExperimentRunner:
     def save_html_report(self):
         """Generate and save HTML report"""
         html_content = self.generate_html_report()
-        # output_file = self.output_dir / f"experiment_{self.timestamp}.html"
-        output_file = self.output_dir / f"experiment_report.html"
+        output_file = self.output_dir / f"experiment_{self.timestamp}.html"
+        # output_file = self.output_dir / f"experiment_report.html"
         
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
