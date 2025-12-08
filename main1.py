@@ -15,8 +15,8 @@ from project_root.planner.RRTStarDubins import RRTStarDubins
 from project_root.planner.BiRRTStar import BidirectionalRRTStar
 from project_root.planner.BiRRTStarDubins import BidirectionalRRTStarDubins
 from project_root.environment.SquareCorridorEnvironment import SquareCorridorEnvironment
-# from project_root.planner.PRRTStar import PRRTStar
-# from project_root.planner.PRRTStarDubins import PRRTStarDubins
+from project_root.planner.PRRTStar import PRRTStar
+from project_root.planner.PRRTStarDubins import PRRTStarDubins
 
 from project_root.environment.RandomEnvironment import RandomEnvironment
 from project_root.environment.CorridorEnvironment import CorridorEnvironment
@@ -37,10 +37,10 @@ class ExperimentRunner:
         self.planner_classes = {
             "RRTStar": RRTStar,
             "RRTStarDubins": RRTStarDubins,
-            "BidirectionalRRTStar": BidirectionalRRTStar,
-            "BidirectionalRRTStarDubins": BidirectionalRRTStarDubins,
-            # "PRRTStar": PRRTStar,
-            # "PRRTStarDubins": PRRTStarDubins,
+            "BiRRTStar": BidirectionalRRTStar,
+            "BiRRTStarDubins": BidirectionalRRTStarDubins,
+            "PRRTStar": PRRTStar,
+            "PRRTStarDubins": PRRTStarDubins,
         }
         
         # Map environment names to classes
@@ -309,6 +309,7 @@ class ExperimentRunner:
         
         # Run each algorithm
         algorithms = experiment.get("algorithms", [])
+        print(f"Found {len(algorithms)} algorithms")
         exp_results = {
             "experiment_name": exp_name,
             "description": exp_desc,
@@ -318,8 +319,13 @@ class ExperimentRunner:
             "algorithms": []
         }
         
-        for algo_config in algorithms:
+        for idx, algo_config in enumerate(algorithms, 1):
             algo_name = algo_config.get("name")
+            # Check if algorithm is enabled (default to True if field not present)
+            if not algo_config.get("enabled", True):
+                print(f"[{idx}/{len(algorithms)}] Skipping {algo_name} (disabled)")
+                continue
+            print(f"[{idx}/{len(algorithms)}] Running {algo_name}...")
             result = self.run_algorithm(algo_config, start, goal, env)
             
             algo_result = {
@@ -370,6 +376,10 @@ class ExperimentRunner:
         start_time = time.time()
         
         for i, experiment in enumerate(self.experiments, 1):
+            # Check if experiment is enabled (default to True if field not present)
+            if not experiment.get("enabled", True):
+                print(f"\n[Experiment {i}/{len(self.experiments)}] SKIPPED (disabled)")
+                continue
             print(f"\n[Experiment {i}/{len(self.experiments)}]")
             self.run_experiment(experiment)
         
@@ -871,7 +881,8 @@ class ExperimentRunner:
     def save_html_report(self):
         """Generate and save HTML report"""
         html_content = self.generate_html_report()
-        output_file = self.output_dir / f"experiment_{self.timestamp}.html"
+        # output_file = self.output_dir / f"experiment_{self.timestamp}.html"
+        output_file = self.output_dir / f"experiment_report.html"
         
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
