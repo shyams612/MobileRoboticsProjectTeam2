@@ -7,12 +7,17 @@ from typing import List, Tuple, Optional
 # ============================================
 
 class CorridorEnvironment:
-    """Corridor environment with walls and passages for path planning"""
+    """
+    Corridor environment with rooms connected by passages.
+    
+    Rooms are bounded rectangular spaces, and corridors are continuous passages
+    with obstacles (walls) on both sides connecting different rooms.
+    """
     
     def __init__(self, width: int = 50, height: int = 50, 
                  corridor_width: int = 5, num_corridors: int = 3, seed: int = None):
         """
-        Create a corridor environment with passages
+        Create a corridor environment with rooms and connecting passages.
         
         Parameters:
         -----------
@@ -21,9 +26,9 @@ class CorridorEnvironment:
         height : int
             Height of the environment grid
         corridor_width : int
-            Width of the corridors (passages)
+            Width of the corridors (passages between rooms)
         num_corridors : int
-            Number of corridor segments to create
+            Number of corridors to create (also determines number of rooms)
         seed : int
             Random seed for reproducibility
         """
@@ -35,58 +40,145 @@ class CorridorEnvironment:
         
         # Grid: 0 = free, 1 = obstacle
         self.grid = np.ones((height, width), dtype=int)  # Start with all obstacles
+        self.rooms = []  # List of room rectangles: [(x1, y1, x2, y2), ...]
+        
         self._generate_environment()
     
     def _generate_environment(self):
-        """Generate corridor environment with walls and passages"""
+        """Generate corridor environment with rooms and connecting passages"""
         if self.seed is not None:
             np.random.seed(self.seed)
         
-        # Create horizontal and vertical corridors
-        for i in range(self.num_corridors):
-            if i % 2 == 0:
-                # Horizontal corridor
-                y_pos = np.random.randint(self.corridor_width, self.height - self.corridor_width)
-                self._add_horizontal_corridor(y_pos)
-            else:
-                # Vertical corridor
-                x_pos = np.random.randint(self.corridor_width, self.width - self.corridor_width)
-                self._add_vertical_corridor(x_pos)
+        # Step 1: Initialize with obstacles everywhere
+        self.grid = np.ones((self.height, self.width), dtype=int)
         
-        # Add some open areas at intersections or random locations
-        num_open_areas = max(2, self.num_corridors // 2)
-        for _ in range(num_open_areas):
-            x_center = np.random.randint(self.corridor_width * 2, self.width - self.corridor_width * 2)
-            y_center = np.random.randint(self.corridor_width * 2, self.height - self.corridor_width * 2)
-            size = self.corridor_width * 2
-            self._add_open_area(x_center, y_center, size)
+        # Step 2: Create rooms scattered throughout the environment (as free space)
+        num_rooms = self.num_corridors + 1
+        self._create_rooms(num_rooms)
+        
+        # Step 3: Create corridors connecting rooms (as free passages)
+        self._create_connecting_corridors()
         
         # Calculate actual free space
         free_space = np.sum(self.grid == 0) / self.grid.size * 100
-        print(f"Corridor environment generated: {self.num_corridors} corridors, {free_space:.1f}% free space")
+        print(f"Corridor environment generated: {len(self.rooms)} rooms, "
+              f"{self.num_corridors} corridors, {free_space:.1f}% free space")
     
-    def _add_horizontal_corridor(self, y_center: int):
-        """Add a horizontal corridor at given y position"""
+    def _create_rooms(self, num_rooms: int):
+        """Create random rectangular rooms in the environment (as free space)"""
+        min_room_size = max(self.corridor_width * 2, 5)
+        max_room_size = max(min(self.corridor_width * 6, self.width // 4), min_room_size + 1)
+        
+        created_rooms = 0
+        for attempt_round in range(5):  # Multiple rounds to create rooms
+            for _ in range(num_rooms * 2):  # Extra attempts
+                # Random room dimensions
+                room_width = np.random.randint(min_room_size, max_room_size + 1)
+                room_height = np.random.randint(min_room_size, max_room_size + 1)
+                
+                # Random position with margins
+                margin = self.corridor_width
+                
+                # Ensure we have valid bounds
+                x_min = margin
+                x_max = self.width - room_width - margin
+                y_min = margin
+                y_max = self.height - room_height - margin
+                
+                if x_max <= x_min or y_max <= y_min:
+                    continue
+                
+                x1 = np.random.randint(x_min, x_max + 1)
+                y1 = np.random.randint(y_min, y_max + 1)
+                x2 = x1 + room_width
+                y2 = y1 + room_height
+                
+                # Check for overlap with existing rooms
+                overlaps = False
+                for (rx1, ry1, rx2, ry2) in self.rooms:
+                    # Add buffer zone around rooms
+                    buffer = self.corridor_width
+                    if not (x2 + buffer < rx1 or x1 - buffer > rx2 or 
+                            y2 + buffer < ry1 or y1 - buffer > ry2):
+                        overlaps = True
+                        break
+                
+                if not overlaps:
+                    # Add room and mark as free space (0)
+                    self.rooms.append((x1, y1, x2, y2))
+                    self.grid[y1:y2, x1:x2] = 0
+                    created_rooms += 1
+                    
+                    if created_rooms >= num_rooms:
+                        return
+    
+    def _create_connecting_corridors(self):
+        """Create corridors connecting adjacent rooms"""
+        num_rooms = len(self.rooms)
+        
+        # Create corridors between pairs of rooms
+        for i in range(min(self.num_corridors, num_rooms - 1)):
+            room_a_idx = i % num_rooms
+            room_b_idx = (i + 1) % num_rooms
+            
+            room_a = self.rooms[room_a_idx]
+            room_b = self.rooms[room_b_idx]
+            
+            # Get center points of rooms
+            center_a = ((room_a[0] + room_a[2]) / 2, (room_a[1] + room_a[3]) / 2)
+            center_b = ((room_b[0] + room_b[2]) / 2, (room_b[1] + room_b[3]) / 2)
+            
+            # Create L-shaped corridor (horizontal then vertical, or vice versa)
+            if np.random.random() < 0.5:
+                # Horizontal first, then vertical
+                self._add_horizontal_passage(center_a[1], center_a[0], center_b[0])
+                self._add_vertical_passage(center_b[0], center_a[1], center_b[1])
+            else:
+                # Vertical first, then horizontal
+                self._add_vertical_passage(center_a[0], center_a[1], center_b[1])
+                self._add_horizontal_passage(center_b[1], center_a[0], center_b[0])
+    
+    def _add_horizontal_passage(self, y_center: float, x_start: float, x_end: float):
+        """
+        Add a horizontal corridor (passage) between two x-coordinates.
+        
+        The corridor is a continuous free space with walls on both sides.
+        """
+        x_start_int = int(round(min(x_start, x_end)))
+        x_end_int = int(round(max(x_start, x_end)))
+        y_center_int = int(round(y_center))
+        
+        # Corridor dimensions
         half_width = self.corridor_width // 2
-        y_start = max(0, y_center - half_width)
-        y_end = min(self.height, y_center + half_width + 1)
-        self.grid[y_start:y_end, :] = 0
+        y_top = max(0, y_center_int + half_width)
+        y_bottom = max(0, y_center_int - half_width)
+        
+        # Mark corridor as free space
+        x_start_int = max(0, x_start_int)
+        x_end_int = min(self.width, x_end_int)
+        
+        self.grid[y_bottom:y_top + 1, x_start_int:x_end_int] = 0
     
-    def _add_vertical_corridor(self, x_center: int):
-        """Add a vertical corridor at given x position"""
+    def _add_vertical_passage(self, x_center: float, y_start: float, y_end: float):
+        """
+        Add a vertical corridor (passage) between two y-coordinates.
+        
+        The corridor is a continuous free space with walls on both sides.
+        """
+        y_start_int = int(round(min(y_start, y_end)))
+        y_end_int = int(round(max(y_start, y_end)))
+        x_center_int = int(round(x_center))
+        
+        # Corridor dimensions
         half_width = self.corridor_width // 2
-        x_start = max(0, x_center - half_width)
-        x_end = min(self.width, x_center + half_width + 1)
-        self.grid[:, x_start:x_end] = 0
-    
-    def _add_open_area(self, x_center: int, y_center: int, size: int):
-        """Add an open area (room) at given position"""
-        half_size = size // 2
-        x_start = max(0, x_center - half_size)
-        x_end = min(self.width, x_center + half_size)
-        y_start = max(0, y_center - half_size)
-        y_end = min(self.height, y_center + half_size)
-        self.grid[y_start:y_end, x_start:x_end] = 0
+        x_right = min(self.width - 1, x_center_int + half_width)
+        x_left = max(0, x_center_int - half_width)
+        
+        # Mark corridor as free space
+        y_start_int = max(0, y_start_int)
+        y_end_int = min(self.height, y_end_int)
+        
+        self.grid[y_start_int:y_end_int, x_left:x_right + 1] = 0
     
     def is_free(self, x: float, y: float) -> bool:
         """
@@ -108,6 +200,13 @@ class CorridorEnvironment:
             return False
         
         return self.grid[y_int, x_int] == 0
+    
+    def _is_in_room(self, x: float, y: float) -> bool:
+        """Check if a point is inside any defined room"""
+        for (x1, y1, x2, y2) in self.rooms:
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                return True
+        return False
     
     def is_collision_free(self, pos_a: Tuple[float, float], pos_b: Tuple[float, float]) -> bool:
         """
@@ -161,15 +260,26 @@ class CorridorEnvironment:
         raise RuntimeError("No free space in environment")
     
     def visualize(self):
-        """Visualize the environment"""
+        """Visualize the environment with rooms and corridors"""
         free_space = np.sum(self.grid == 0) / self.grid.size * 100
         
         fig, ax = plt.subplots(figsize=(10, 10))
+        
+        # Draw grid: obstacles in black, free space in white
         ax.imshow(self.grid, cmap='binary', origin='lower', 
                  extent=[0, self.width, 0, self.height])
+        
+        # Highlight rooms with a different color
+        for (x1, y1, x2, y2) in self.rooms:
+            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, 
+                                fill=False, edgecolor='blue', linewidth=2, label='Rooms')
+            ax.add_patch(rect)
+        
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
-        ax.set_title(f'Corridor Environment ({self.num_corridors} corridors, {free_space:.1f}% free space)')
+        ax.set_title(f'Corridor Environment ({len(self.rooms)} rooms, {self.num_corridors} corridors, {free_space:.1f}% free space)')
+        ax.set_xlim(0, self.width)
+        ax.set_ylim(0, self.height)
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
         plt.tight_layout()
@@ -197,6 +307,12 @@ class CorridorEnvironment:
         ax.imshow(self.grid, cmap='binary', origin='lower',
                  extent=[0, self.width, 0, self.height])
         
+        # Highlight rooms
+        for (x1, y1, x2, y2) in self.rooms:
+            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, 
+                                fill=False, edgecolor='blue', linewidth=1.5, alpha=0.6)
+            ax.add_patch(rect)
+        
         # Draw path (if found)
         if path and len(path) > 0:
             path_x = [p[0] for p in path]
@@ -220,7 +336,7 @@ class CorridorEnvironment:
         ax.set_xlabel('X', fontsize=12)
         ax.set_ylabel('Y', fontsize=12)
         
-        # Simple title
+        # Title with path info
         if path:
             path_length = sum(np.sqrt((path[i+1][0] - path[i][0])**2 + 
                                      (path[i+1][1] - path[i][1])**2)
