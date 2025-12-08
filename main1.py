@@ -14,6 +14,7 @@ from project_root.planner.RRTStar import RRTStar
 from project_root.planner.RRTStarDubins import RRTStarDubins
 from project_root.planner.BiRRTStar import BidirectionalRRTStar
 from project_root.planner.BiRRTStarDubins import BidirectionalRRTStarDubins
+from project_root.environment.SquareCorridorEnvironment import SquareCorridorEnvironment
 # from project_root.planner.PRRTStar import PRRTStar
 # from project_root.planner.PRRTStarDubins import PRRTStarDubins
 
@@ -46,6 +47,7 @@ class ExperimentRunner:
         self.env_classes = {
             "RandomEnvironment": RandomEnvironment,
             "CorridorEnvironment": CorridorEnvironment,
+            "SquareCorridorEnvironment": SquareCorridorEnvironment
         }
     
     def load_experiments(self):

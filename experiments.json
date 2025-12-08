@@ -35,12 +35,55 @@
             "rewire_radius": 8.0,
             "turning_radius": 3.0,
             "goal_sample_rate": 0.1,
-            "early_stop": false
+            "early_stop": true
           },
           "start_theta": 0,
           "goal_theta": 1.5708
-        } 
-    ]
+        }
+      ]
+    },
+    {
+      "name": "Square Corridor RRT Comparison",
+      "desc": "Compare RRTStar and RRTStarDubins in a square corridor environment",
+      "env": {
+        "name": "SquareCorridorEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "corridor_width": 15,
+          "center_margin": 30,
+          "seed": 42,
+          "robot_radius": 1.0
+        }
+      },
+      "start": "sample",
+      "goal": "sample",
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 1.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          }
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 0.5,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 2.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "start_theta": 0,
+          "goal_theta": 0
+        }
+      ]
     }
   ]
 }

@@ -9,13 +9,16 @@ from project_root.planner.PRRTStarDubins import PRRTStarDubins
 
 from project_root.environment.RandomEnvironment import RandomEnvironment
 from project_root.environment.CorridorEnvironment import CorridorEnvironment
+from project_root.environment.SquareCorridorEnvironment import SquareCorridorEnvironment
 
 import math
 
 
 if __name__ == "__main__":
     # Create random environment
-    env = RandomEnvironment(width=100, height=100, density=2.5, seed=None, robot_radius=2.0)
+    env = SquareCorridorEnvironment(width=120, height=120, corridor_width=15, 
+                                        center_margin=35, seed=456)
+    env.visualize()
     # env = RandomEnvironment(width=50, height=50, density=20, seed=42)
     # env = CorridorEnvironment(width=50, height=50, corridor_width=12, num_corridors=5, seed=400)
     # env.visualize()
@@ -42,31 +45,31 @@ if __name__ == "__main__":
     path = planner.search()
     planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running Bidirectional RRT planner...")
-    planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running Bidirectional RRT planner...")
+    # planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
-    print("*"*30)
-    print("Running Bidirectional RRT Dubins planner...")
-    start1 = tuple(list(start) + [0])
-    goal1 = tuple(list(goal) + [math.pi/2])
-    planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Running Bidirectional RRT Dubins planner...")
+    # start1 = tuple(list(start) + [0])
+    # goal1 = tuple(list(goal) + [math.pi/2])
+    # planner = BidirectionalRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running P-RRT* planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running P-RRT* planner...")
+    # planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running P-RRT* Dubins planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running P-RRT* Dubins planner...")
+    # planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
