@@ -6,6 +6,7 @@ from project_root.planner.BiRRTStarDubins import BidirectionalRRTStarDubins
 
 from project_root.planner.PRRTStar import PRRTStar
 from project_root.planner.PRRTStarDubins import PRRTStarDubins
+from project_root.planner.OptimizedBiRRTStarDubins import OptimizedBiRRTStarDubins
 
 from project_root.environment.RandomEnvironment import RandomEnvironment
 from project_root.environment.CorridorEnvironment import CorridorEnvironment
@@ -27,27 +28,27 @@ if __name__ == "__main__":
     # start = (10, 10)
     # goal = (90, 90)
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running RRT* planner...")
-    planner = RRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running RRT* planner...")
+    # planner = RRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
-    print("*"*30)
-    print("Running RRT* Dubins planner...")
-    start1 = tuple(list(start) + [0])
-    goal1 = tuple(list(goal) + [math.pi/2])
-    planner = RRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Running RRT* Dubins planner...")
+    # start1 = tuple(list(start) + [0])
+    # goal1 = tuple(list(goal) + [math.pi/2])
+    # planner = RRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running Bidirectional RRT planner...")
-    planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running Bidirectional RRT planner...")
+    # planner = BidirectionalRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
     print("*"*30)
     print("Running Bidirectional RRT Dubins planner...")
@@ -57,16 +58,24 @@ if __name__ == "__main__":
     path = planner.search()
     planner.show_path() 
 
-    print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running P-RRT* planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
-    path = planner.search()
-    planner.show_path() 
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running P-RRT* planner...")
+    # planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
+
+    # print("*"*30)
+    # print("Starting point:", start, "Goal point:", goal)
+    # print("Running P-RRT* Dubins planner...")
+    # planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    # path = planner.search()
+    # planner.show_path() 
 
     print("*"*30)
-    print("Starting point:", start, "Goal point:", goal)
-    print("Running P-RRT* Dubins planner...")
-    planner = PRRTStar(start=start, goal=goal, env=env, early_stop=True)
+    print("Running Optimized Bidirectional RRT Dubins planner...")
+    start1 = tuple(list(start) + [0])
+    goal1 = tuple(list(goal) + [math.pi/2])
+    planner = OptimizedBiRRTStarDubins(start=start1, goal=goal1, env=env, early_stop=True)
     path = planner.search()
     planner.show_path() 
