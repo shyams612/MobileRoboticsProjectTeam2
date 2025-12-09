@@ -1,0 +1,686 @@
+{
+  "results": [
+    {
+      "experiment_name": "Low Density Environment",
+      "description": "Compare RRTStar, BiRRTStar, PRRTStar, and Dubins variants in a low-density random environment",
+      "environment": {
+        "name": "RandomEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "density": 0.1,
+          "seed": 42,
+          "robot_radius": 0.1
+        }
+      },
+      "start": [
+        37.38935368297651,
+        33.32462720389405
+      ],
+      "goal": [
+        17.680160467785434,
+        60.7052136761285
+      ],
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.03220105171203613,
+          "path_length": 35.642370842027695,
+          "num_nodes": 152,
+          "final_cost": 35.642370842027695,
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        },
+        {
+          "name": "BiRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "max_iters": 10000,
+            "connection_threshold": 1.5,
+            "search_radius": 3.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.0024487972259521484,
+          "path_length": 34.26254864307156,
+          "num_nodes": 28,
+          "final_cost": 34.26254864307156,
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        },
+        {
+          "name": "PRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": true,
+          "time": 0.0551910400390625,
+          "path_length": 34.73087446666549,
+          "num_nodes": 34,
+          "final_cost": 34.73087446666549,
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.00688624382019043,
+          "path_length": 35.594669316686584,
+          "num_nodes": 60,
+          "final_cost": 36.40674820197879,
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        },
+        {
+          "name": "BiRRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "max_iters": 5000,
+            "connection_threshold": 3.5,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "search_radius": 5.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.0009021759033203125,
+          "path_length": 36.705058398354325,
+          "num_nodes": 28,
+          "final_cost": 40.2845716910601,
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        },
+        {
+          "name": "PRRTStarDubins",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": false,
+          "time": 0.06264400482177734,
+          "error": "too many values to unpack (expected 2)",
+          "start": [
+            37.38935368297651,
+            33.32462720389405
+          ],
+          "goal": [
+            17.680160467785434,
+            60.7052136761285
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_name": "High Density Environment",
+      "description": "Compare all 6 algorithms in a high-density random environment",
+      "environment": {
+        "name": "RandomEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "density": 5,
+          "seed": 42,
+          "robot_radius": 1.0
+        }
+      },
+      "start": [
+        37.616800209736454,
+        33.62538543067752
+      ],
+      "goal": [
+        18.263083425280286,
+        60.51213366994582
+      ],
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.036073923110961914,
+          "path_length": 36.543400874906226,
+          "num_nodes": 137,
+          "final_cost": 36.543400874906226,
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        },
+        {
+          "name": "BiRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "max_iters": 10000,
+            "connection_threshold": 1.5,
+            "search_radius": 3.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.003284931182861328,
+          "path_length": 37.40771412101754,
+          "num_nodes": 34,
+          "final_cost": 37.40771412101754,
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        },
+        {
+          "name": "PRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": true,
+          "time": 0.049481868743896484,
+          "path_length": 35.66033156768957,
+          "num_nodes": 66,
+          "final_cost": 35.66033156768957,
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.1785109043121338,
+          "path_length": 36.24951599117808,
+          "num_nodes": 346,
+          "final_cost": 40.67150833820989,
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        },
+        {
+          "name": "BiRRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "max_iters": 5000,
+            "connection_threshold": 3.5,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "search_radius": 5.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.005966663360595703,
+          "path_length": 48.97214122057057,
+          "num_nodes": 62,
+          "final_cost": 50.797234647908475,
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        },
+        {
+          "name": "PRRTStarDubins",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": false,
+          "time": 0.09434628486633301,
+          "error": "too many values to unpack (expected 2)",
+          "start": [
+            37.616800209736454,
+            33.62538543067752
+          ],
+          "goal": [
+            18.263083425280286,
+            60.51213366994582
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_name": "Square Corridor - Wide",
+      "description": "Compare all algorithms in a wide square corridor environment",
+      "environment": {
+        "name": "SquareCorridorEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "corridor_width": 20,
+          "center_margin": 30,
+          "seed": 42,
+          "robot_radius": 1.0
+        }
+      },
+      "start": [
+        37.704931647041526,
+        94.17000202817178
+      ],
+      "goal": [
+        16.28982676335878,
+        16.28746299294786
+      ],
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.038990020751953125,
+          "path_length": 96.12424505873678,
+          "num_nodes": 271,
+          "final_cost": 96.6730198254104,
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        },
+        {
+          "name": "BiRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "max_iters": 10000,
+            "connection_threshold": 1.5,
+            "search_radius": 3.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.01467275619506836,
+          "path_length": 93.82307634662999,
+          "num_nodes": 151,
+          "final_cost": 93.82307634663002,
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        },
+        {
+          "name": "PRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": true,
+          "time": 0.5372140407562256,
+          "path_length": 169.14573874611384,
+          "num_nodes": 363,
+          "final_cost": 169.46446753780967,
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 2.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 1.112555980682373,
+          "path_length": 92.94563120311159,
+          "num_nodes": 1856,
+          "final_cost": 107.59625615199752,
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        },
+        {
+          "name": "BiRRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "max_iters": 5000,
+            "connection_threshold": 3.5,
+            "turning_radius": 2.0,
+            "goal_sample_rate": 0.1,
+            "search_radius": 5.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.042326927185058594,
+          "path_length": 105.85211995182127,
+          "num_nodes": 320,
+          "final_cost": 109.0248586156554,
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        },
+        {
+          "name": "PRRTStarDubins",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": false,
+          "time": 0.3096039295196533,
+          "error": "too many values to unpack (expected 2)",
+          "start": [
+            37.704931647041526,
+            94.17000202817178
+          ],
+          "goal": [
+            16.28982676335878,
+            16.28746299294786
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_name": "Square Corridor - Tight",
+      "description": "Compare all algorithms in a tight square corridor environment",
+      "environment": {
+        "name": "SquareCorridorEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "corridor_width": 8,
+          "center_margin": 30,
+          "seed": 42,
+          "robot_radius": 1.0
+        }
+      },
+      "start": [
+        16.28982676335878,
+        16.28746299294786
+      ],
+      "goal": [
+        82.57937879844133,
+        21.809232846471062
+      ],
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.028954029083251953,
+          "path_length": 68.22708535708865,
+          "num_nodes": 199,
+          "final_cost": 68.24804446517071,
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        },
+        {
+          "name": "BiRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "max_iters": 10000,
+            "connection_threshold": 1.5,
+            "search_radius": 3.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.01419687271118164,
+          "path_length": 68.84736091549709,
+          "num_nodes": 150,
+          "final_cost": 68.8473609154971,
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        },
+        {
+          "name": "PRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": true,
+          "time": 0.07054710388183594,
+          "path_length": 67.22850102831805,
+          "num_nodes": 99,
+          "final_cost": 67.22855498966338,
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 1.5,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.02571892738342285,
+          "path_length": 70.91679438330021,
+          "num_nodes": 192,
+          "final_cost": 71.96231169931899,
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        },
+        {
+          "name": "BiRRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "max_iters": 5000,
+            "connection_threshold": 3.5,
+            "turning_radius": 1.5,
+            "goal_sample_rate": 0.1,
+            "search_radius": 5.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.015290975570678711,
+          "path_length": 77.85480289345625,
+          "num_nodes": 157,
+          "final_cost": 81.31055101991957,
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        },
+        {
+          "name": "PRRTStarDubins",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 0.71,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "success": false,
+          "time": 0.10599899291992188,
+          "error": "too many values to unpack (expected 2)",
+          "start": [
+            16.28982676335878,
+            16.28746299294786
+          ],
+          "goal": [
+            82.57937879844133,
+            21.809232846471062
+          ]
+        }
+      ]
+    }
+  ]
+}
