@@ -1,0 +1,76 @@
+{
+  "results": [
+    {
+      "experiment_name": "Low Density Comparison",
+      "description": "Compare all planners in a low-density random environment",
+      "environment": {
+        "name": "RandomEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "density": 0.0,
+          "seed": 42,
+          "robot_radius": 0.0
+        }
+      },
+      "start": [
+        10,
+        10
+      ],
+      "goal": [
+        90,
+        90
+      ],
+      "algorithms": [
+        {
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 1.0,
+            "max_iters": 10000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          },
+          "success": true,
+          "time": 0.11229610443115234,
+          "path_length": 122.47775132244332,
+          "num_nodes": 398,
+          "final_cost": 122.89084820658688,
+          "start": [
+            10,
+            10
+          ],
+          "goal": [
+            90,
+            90
+          ]
+        },
+        {
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 0.5,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 3.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": false
+          },
+          "success": true,
+          "time": 8.545451164245605,
+          "path_length": 114.62470674488162,
+          "num_nodes": 4908,
+          "final_cost": 114.86977700473489,
+          "start": [
+            10,
+            10
+          ],
+          "goal": [
+            90,
+            90
+          ]
+        }
+      ]
+    }
+  ]
+}
