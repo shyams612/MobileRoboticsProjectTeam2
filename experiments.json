@@ -23,7 +23,7 @@
           "params": {
             "step_size": 1.5,
             "goal_radius": 2.0,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true
           }
@@ -33,7 +33,7 @@
           "name": "BiRRTStar",
           "params": {
             "step_size": 1.5,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "connection_threshold": 1.5,
             "search_radius": 3.0,
             "early_stop": true
@@ -44,8 +44,8 @@
           "name": "PRRTStar",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
-            "max_iters": 10000,
+            "goal_radius": 2,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
             "k": 90,
@@ -60,7 +60,7 @@
             "step_size": 2.0,
             "goal_radius": 2.0,
             "max_iters": 5000,
-            "rewire_radius": 8.0,
+            "rewire_radius": 4.0,
             "turning_radius": 1.0,
             "goal_sample_rate": 0.1,
             "early_stop": true
@@ -103,16 +103,16 @@
     },
     {
       "enabled": true,
-      "name": "High Density Environment",
-      "desc": "Compare all 6 algorithms in a high-density random environment",
+      "name": "Scaled Low Density Environment",
+      "desc": "Compare RRTStar, BiRRTStar, PRRTStar, and Dubins variants in a 200x200 low-density random environment",
       "env": {
         "name": "RandomEnvironment",
         "params": {
-          "width": 100,
-          "height": 100,
-          "density": 5,
+          "width": 200,
+          "height": 200,
+          "density": 0.1,
           "seed": 42,
-          "robot_radius": 1.0
+          "robot_radius": 0.1
         }
       },
       "start": "sample",
@@ -123,8 +123,8 @@
           "name": "RRTStar",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 2.0,
-            "max_iters": 10000,
+            "goal_radius": 4.0,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true
           }
@@ -134,7 +134,7 @@
           "name": "BiRRTStar",
           "params": {
             "step_size": 1.5,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "connection_threshold": 1.5,
             "search_radius": 3.0,
             "early_stop": true
@@ -145,8 +145,8 @@
           "name": "PRRTStar",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
-            "max_iters": 10000,
+            "goal_radius": 2,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
             "k": 90,
@@ -189,7 +189,108 @@
           "name": "PRRTStarDubins",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
+            "goal_radius": 2,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          },
+          "start_theta": 0,
+          "goal_theta": 1.5708
+        }
+      ]
+    },
+    {
+      "enabled": true,
+      "name": "High Density Environment",
+      "desc": "Compare all 6 algorithms in a high-density random environment",
+      "env": {
+        "name": "RandomEnvironment",
+        "params": {
+          "width": 100,
+          "height": 100,
+          "density": 5,
+          "seed": 42,
+          "robot_radius": 1.0
+        }
+      },
+      "start": "sample",
+      "goal": "sample",
+      "algorithms": [
+        {
+          "enabled": true,
+          "name": "RRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true
+          }
+        },
+        {
+          "enabled": true,
+          "name": "BiRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "max_iters": 5000,
+            "connection_threshold": 1.5,
+            "search_radius": 3.0,
+            "early_stop": true
+          }
+        },
+        {
+          "enabled": true,
+          "name": "PRRTStar",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2,
+            "max_iters": 5000,
+            "rewire_radius": 4.0,
+            "early_stop": true,
+            "k": 90,
+            "lambda_step": 0.5,
+            "d_star_obs": 0.5
+          }
+        },
+        {
+          "enabled": true,
+          "name": "RRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "goal_radius": 2.0,
+            "max_iters": 5000,
+            "rewire_radius": 8.0,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "early_stop": true
+          },
+          "start_theta": 0,
+          "goal_theta": 1.5708
+        },
+        {
+          "enabled": true,
+          "name": "BiRRTStarDubins",
+          "params": {
+            "step_size": 2.0,
+            "max_iters": 5000,
+            "connection_threshold": 3.5,
+            "turning_radius": 1.0,
+            "goal_sample_rate": 0.1,
+            "search_radius": 5.0,
+            "early_stop": true
+          },
+          "start_theta": 0,
+          "goal_theta": 1.5708
+        },
+        {
+          "enabled": true,
+          "name": "PRRTStarDubins",
+          "params": {
+            "step_size": 1.5,
+            "goal_radius": 2,
             "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
@@ -226,7 +327,7 @@
           "params": {
             "step_size": 1.5,
             "goal_radius": 2.0,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true
           }
@@ -236,7 +337,7 @@
           "name": "BiRRTStar",
           "params": {
             "step_size": 1.5,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "connection_threshold": 1.5,
             "search_radius": 3.0,
             "early_stop": true
@@ -247,8 +348,8 @@
           "name": "PRRTStar",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
-            "max_iters": 10000,
+            "goal_radius": 2,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
             "k": 90,
@@ -291,7 +392,7 @@
           "name": "PRRTStarDubins",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
+            "goal_radius": 2,
             "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
@@ -328,7 +429,7 @@
           "params": {
             "step_size": 1.5,
             "goal_radius": 2.0,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true
           }
@@ -338,7 +439,7 @@
           "name": "BiRRTStar",
           "params": {
             "step_size": 1.5,
-            "max_iters": 10000,
+            "max_iters": 5000,
             "connection_threshold": 1.5,
             "search_radius": 3.0,
             "early_stop": true
@@ -349,8 +450,8 @@
           "name": "PRRTStar",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
-            "max_iters": 10000,
+            "goal_radius": 2,
+            "max_iters": 5000,
             "rewire_radius": 4.0,
             "early_stop": true,
             "k": 90,
@@ -393,13 +494,13 @@
           "name": "PRRTStarDubins",
           "params": {
             "step_size": 1.5,
-            "goal_radius": 0.71,
+            "goal_radius": 3,
             "max_iters": 5000,
-            "rewire_radius": 4.0,
+            "rewire_radius": 10.0,
             "early_stop": true,
             "k": 90,
             "lambda_step": 0.5,
-            "d_star_obs": 0.5
+            "d_star_obs": 1
           },
           "start_theta": 0,
           "goal_theta": 0
