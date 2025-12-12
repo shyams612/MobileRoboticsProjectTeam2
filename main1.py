@@ -785,6 +785,586 @@ class ExperimentRunner:
         print(f"Total runs: {len(self.results)}")
         print(f"{'#'*80}")
     
+    def generate_comprehensive_html_report(self) -> str:
+        """Generate comprehensive HTML report with all runs and experiments"""
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Planning Experiments - Comprehensive Report</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }}
+        
+        .header .timestamp {{
+            font-size: 1.1em;
+            opacity: 0.9;
+        }}
+        
+        .summary {{
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }}
+        
+        .summary h2 {{
+            color: #667eea;
+            margin-bottom: 20px;
+        }}
+        
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }}
+        
+        .summary-card {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        
+        .summary-card .value {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }}
+        
+        .summary-card .label {{
+            color: #666;
+            font-size: 0.9em;
+        }}
+        
+        .toc {{
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }}
+        
+        .toc h2 {{
+            color: #667eea;
+            margin-bottom: 20px;
+        }}
+        
+        .toc ul {{
+            list-style: none;
+            columns: 2;
+            column-gap: 30px;
+        }}
+        
+        .toc li {{
+            margin: 8px 0;
+        }}
+        
+        .toc a {{
+            color: #667eea;
+            text-decoration: none;
+        }}
+        
+        .toc a:hover {{
+            text-decoration: underline;
+        }}
+        
+        .experiment-group {{
+            padding: 40px;
+            border-bottom: 1px solid #e9ecef;
+        }}
+        
+        .experiment-group:last-child {{
+            border-bottom: none;
+        }}
+        
+        .experiment-group h2 {{
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }}
+        
+        .run {{
+            background: white;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #667eea;
+        }}
+        
+        .run h3 {{
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }}
+        
+        .run-meta {{
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #555;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }}
+        
+        thead {{
+            background: #667eea;
+            color: white;
+        }}
+        
+        th {{
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }}
+        
+        td {{
+            padding: 10px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }}
+        
+        tbody tr:hover {{
+            background: #f8f9fa;
+        }}
+        
+        .status-success {{
+            color: #28a745;
+            font-weight: bold;
+        }}
+        
+        .status-failure {{
+            color: #dc3545;
+            font-weight: bold;
+        }}
+        
+        .badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 8px;
+        }}
+        
+        .badge-es {{
+            background: #ffc107;
+            color: #000;
+        }}
+        
+        .badge-fs {{
+            background: #17a2b8;
+            color: white;
+        }}
+        
+        .visualizations {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }}
+        
+        .viz-card {{
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }}
+        
+        .viz-card .viz-header {{
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }}
+        
+        .viz-card img {{
+            width: 100%;
+            height: auto;
+            display: block;
+        }}
+        
+        .viz-card .viz-footer {{
+            padding: 10px 15px;
+            background: #f8f9fa;
+            font-size: 0.85em;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+        }}
+        
+        .no-visualization {{
+            padding: 30px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }}
+        
+        .overall-stats {{
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-top: 2px solid #e9ecef;
+        }}
+        
+        .overall-stats h2 {{
+            color: #667eea;
+            margin-bottom: 20px;
+        }}
+        
+        .footer {{
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #e9ecef;
+        }}
+        
+        @media print {{
+            body {{
+                padding: 0;
+            }}
+            .container {{
+                box-shadow: none;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Path Planning Experiments</h1>
+            <div class="subtitle">Comprehensive Report - All Runs</div>
+            <div class="timestamp">Generated: {datetime.now().strftime("%B %d, %Y at %H:%M:%S")}</div>
+        </div>
+        
+        <div class="summary">
+            <h2>📊 Overall Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="label">Total Experiment Groups</div>
+                    <div class="value">{len(set(exp['experiment_name'] for exp in self.results))}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Runs</div>
+                    <div class="value">{len(self.results)}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Algorithm Runs</div>
+                    <div class="value">{sum(len(exp['algorithms']) for exp in self.results)}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Overall Success Rate</div>
+                    <div class="value">{self._calculate_overall_success_rate():.1f}%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Runtime</div>
+                    <div class="value">{self._calculate_overall_total_time():.1f}s</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Configuration</div>
+                    <div class="value">{self.config_path}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toc">
+            <h2>📑 Table of Contents</h2>
+            <ul>
+"""
+        
+        # Generate table of contents
+        for exp_name in sorted(set(exp['experiment_name'] for exp in self.results)):
+            toc_id = exp_name.replace(" ", "_").lower()
+            html += f'                <li><a href="#{toc_id}">{exp_name}</a></li>\n'
+        
+        html += """
+            </ul>
+        </div>
+"""
+        
+        # Group results by experiment name
+        experiments_by_name = {}
+        for result in self.results:
+            exp_name = result['experiment_name']
+            if exp_name not in experiments_by_name:
+                experiments_by_name[exp_name] = []
+            experiments_by_name[exp_name].append(result)
+        
+        # Generate sections for each experiment
+        for exp_name in sorted(experiments_by_name.keys()):
+            exp_results_list = experiments_by_name[exp_name]
+            exp_id = exp_name.replace(" ", "_").lower()
+            
+            html += f"""
+        <div class="experiment-group" id="{exp_id}">
+            <h2>{exp_name}</h2>
+"""
+            
+            # Add description if available
+            if exp_results_list[0].get('description'):
+                html += f'            <p style="color: #666; margin-bottom: 20px; font-style: italic;">{exp_results_list[0]["description"]}</p>\n'
+            
+            # Show all runs for this experiment
+            for exp_result in exp_results_list:
+                run_num = exp_result.get('run_number', 1)
+                html += self._generate_run_section_html(exp_result, run_num)
+            
+            html += """
+        </div>
+"""
+        
+        # Add overall statistics
+        html += self._generate_overall_statistics_html()
+        
+        # Footer
+        html += f"""
+        <div class="footer">
+            <p>Generated by Path Planning Experiment Framework</p>
+            <p>Configuration: {self.config_path} | Timestamp: {self.timestamp}</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        return html
+    
+    def _generate_run_section_html(self, exp_result: Dict, run_num: int) -> str:
+        """Generate HTML for a single run within an experiment group"""
+        html = f"""
+            <div class="run">
+                <h3>Run {run_num}</h3>
+                <div class="run-meta">
+                    <strong>Start:</strong> {exp_result['start']} | 
+                    <strong>Goal:</strong> {exp_result['goal']} | 
+                    <strong>Env:</strong> {exp_result['environment']['name']} 
+                    ({json.dumps(exp_result['environment']['params'])})
+                </div>
+                
+                <h4>Algorithm Results</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Algorithm</th>
+                            <th>Status</th>
+                            <th>Time (s)</th>
+                            <th>Path Length</th>
+                            <th>Nodes</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+"""
+        
+        for algo in exp_result['algorithms']:
+            name = algo['name']
+            if 'early_stop' in algo.get('params', {}):
+                badge = '<span class="badge badge-es">ES</span>' if algo['params']['early_stop'] else '<span class="badge badge-fs">FS</span>'
+                name += badge
+            
+            status_class = 'status-success' if algo.get('success') else 'status-failure'
+            status_text = '✓ Success' if algo.get('success') else '✗ Failed'
+            time_val = f"{algo.get('time', 0):.2f}"
+            path_len = f"{algo.get('path_length', 0):.2f}" if algo.get('success') else "N/A"
+            nodes = algo.get('num_nodes', 0)
+            cost = f"{algo.get('final_cost', 0):.2f}" if algo.get('final_cost') is not None else "N/A"
+            
+            html += f"""
+                    <tr>
+                        <td>{name}</td>
+                        <td class="{status_class}">{status_text}</td>
+                        <td>{time_val}</td>
+                        <td>{path_len}</td>
+                        <td>{nodes}</td>
+                        <td>{cost}</td>
+                    </tr>
+"""
+        
+        html += """
+                    </tbody>
+                </table>
+                
+                <h4>Path Visualizations</h4>
+                <div class="visualizations">
+"""
+        
+        has_viz = False
+        for algo in exp_result['algorithms']:
+            if algo.get('success') and algo.get('visualization'):
+                has_viz = True
+                name = algo['name']
+                if 'early_stop' in algo.get('params', {}):
+                    suffix = ' [Early Stop]' if algo['params']['early_stop'] else ' [Full Search]'
+                    name += suffix
+                
+                html += f"""
+                    <div class="viz-card">
+                        <div class="viz-header">{name}</div>
+                        <img src="data:image/png;base64,{algo['visualization']}" alt="{name} visualization">
+                        <div class="viz-footer">
+                            Path: {algo.get('path_length', 0):.2f} | 
+                            Nodes: {algo.get('num_nodes', 0)} | 
+                            Time: {algo.get('time', 0):.2f}s
+                        </div>
+                    </div>
+"""
+        
+        if not has_viz:
+            html += '<div class="no-visualization">No successful paths to visualize</div>'
+        
+        html += """
+                </div>
+            </div>
+"""
+        return html
+    
+    def _generate_overall_statistics_html(self) -> str:
+        """Generate overall statistics across all experiments and runs"""
+        # Aggregate statistics by algorithm
+        algo_stats = {}
+        
+        for result in self.results:
+            for algo in result['algorithms']:
+                name = algo['name']
+                if name not in algo_stats:
+                    algo_stats[name] = {
+                        'runs': 0,
+                        'successes': 0,
+                        'times': [],
+                        'path_lengths': [],
+                        'nodes': []
+                    }
+                
+                stats = algo_stats[name]
+                stats['runs'] += 1
+                stats['times'].append(algo.get('time', 0))
+                
+                if algo.get('success'):
+                    stats['successes'] += 1
+                    stats['path_lengths'].append(algo.get('path_length', 0))
+                    stats['nodes'].append(algo.get('num_nodes', 0))
+        
+        html = """
+        <div class="overall-stats">
+            <h2>📈 Algorithm Performance Summary (All Runs)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Success Rate</th>
+                        <th>Avg Time (s)</th>
+                        <th>Avg Path Length</th>
+                        <th>Avg Nodes</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+        
+        for name in sorted(algo_stats.keys()):
+            stats = algo_stats[name]
+            success_rate = (stats['successes'] / stats['runs'] * 100) if stats['runs'] > 0 else 0
+            avg_time = np.mean(stats['times']) if stats['times'] else 0
+            avg_path = np.mean(stats['path_lengths']) if stats['path_lengths'] else 0
+            avg_nodes = np.mean(stats['nodes']) if stats['nodes'] else 0
+            
+            avg_path_str = f"{avg_path:.2f}" if stats['path_lengths'] else 'N/A'
+            avg_nodes_str = f"{avg_nodes:.0f}" if stats['nodes'] else 'N/A'
+            
+            html += f"""
+                    <tr>
+                        <td><strong>{name}</strong></td>
+                        <td>{stats['successes']}/{stats['runs']} ({success_rate:.1f}%)</td>
+                        <td>{avg_time:.2f}</td>
+                        <td>{avg_path_str}</td>
+                        <td>{avg_nodes_str}</td>
+                    </tr>
+"""
+        
+        html += """
+                </tbody>
+            </table>
+        </div>
+"""
+        return html
+    
+    def _calculate_overall_success_rate(self) -> float:
+        """Calculate overall success rate across all runs"""
+        total = 0
+        successes = 0
+        for result in self.results:
+            for algo in result['algorithms']:
+                total += 1
+                if algo.get('success'):
+                    successes += 1
+        return (successes / total * 100) if total > 0 else 0.0
+    
+    def _calculate_overall_total_time(self) -> float:
+        """Calculate total runtime across all runs"""
+        total = 0.0
+        for result in self.results:
+            for algo in result['algorithms']:
+                total += algo.get('time', 0.0)
+        return total
+    
+    def save_comprehensive_html_report(self):
+        """Generate and save comprehensive HTML report with all runs"""
+        html_content = self.generate_comprehensive_html_report()
+        output_file = self.output_dir / f"comprehensive_report_{self.timestamp}.html"
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        print(f"✓ Comprehensive HTML report saved to: {output_file}")
+        print(f"  Open in browser: file://{output_file.absolute()}")
+        
+        return output_file
+    
     def save_json_results(self):
         """Save results to JSON file - now includes all runs"""
         results_to_save = []
@@ -849,6 +1429,7 @@ def main():
         runner.run_all_experiments()
     
     # Save results
+    runner.save_comprehensive_html_report()
     runner.save_json_results()
 
 
